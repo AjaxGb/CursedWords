@@ -82,11 +82,9 @@ window.addEventListener("load",function(){
 });
 
 window.addEventListener("popstate",function(e){
-	if(e.state){
-		plainInput.value = e.state.plain;
-		markupInput.value = e.state.markup;
-	}else{
-		plainInput.value = markupInput.value = "";
+	if(e.state.plain || e.state.markup){
+		plainInput.value = e.state.plain || "";
+		markupInput.value = e.state.markup || "";
 	}
 	updateSkullDisplay();
 });
