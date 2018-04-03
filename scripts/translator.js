@@ -1,4 +1,3 @@
-(function() {
 'use strict';
 
 function CursedWordsTranslator(provider, options) {
@@ -16,34 +15,94 @@ CursedWordsTranslator.explicitEntryRE = /^{(?:\w+:)?(\d+),(?:\w+:)?(\d+),(?:\w+:
 CursedWordsTranslator.missingSkull = new Skull(0, 'X', 0);
 CursedWordsTranslator.missingSkullPair = [CursedWordsTranslator.missingSkull, CursedWordsTranslator.missingSkull];
 
-CursedWordsTranslator.markupToCPWs = function(markup) {
+CursedWordsTranslator.markupToSkullPairs = function(markup) {
 	var skulls = Skull.getAllInText(markup);
 	var result = [];
 	
 	for (var i = 0; i < skulls.length; i += 2) {
-		result.push(
-			CursedWordsTranslator.skullPairToCPW(skulls[i], skulls[i + 1]));
+		result.push(skulls.slice(i, i + 2));
 	}
 	
 	return result;
 };
 
-CursedWordsTranslator.skullPairToCPW = function(skull1, skull2) {
-	// If array, spread
-	skull2 = skull1[1] || skull2;
-	skull1 = skull1[0] || skull1;
+CursedWordsTranslator.skullPairsToMarkup = function(skullPairs, pairsPerLine) {
+	pairsPerLine = pairsPerLine || 2;
 	
-	if (!skull2) {
-		// If there are an odd number of skulls,
-		// the last skull will be unpaired.
-		return skull1;
-	} else {
-		return skull1.type || skull2.type || [
+	var plain = '';
+	
+	for (var i = 0; i < skullPairs.length; i++) {
+		if (i !== 0) {
+			plain += (i % pairsPerLine === 0) ? '\n' : '  ';
+		}
+		for (var j = 0; j < skullPairs[i].length; j++) {
+			if (j !== 0) plain += ' ';
+			plain += skullPairs[i][j].markup;
+		}
+	}
+	
+	return plain;
+};
+
+CursedWordsTranslator.plainToWords = function(plain) {
+	var words = words.toLowerCase().match(CursedWordsTranslator.wordRE);
+	
+	for (var i = words.length - 1; i >= 0; i--) {
+		words[i]
+	}
+	
+	return words;
+};
+
+CursedWordsTranslator.wordsToPlain = function(words) {
+	var plain = '';
+	
+	for (var i = 0; i < words.length; i++) {
+		if (i !== 0) plain += ' ';
+		
+		var word = words[i];
+		
+		if (Array.isArray(word)) {
+			// CPW
+			plain +=
+				'{chap:' + word[0] +
+				',page:' + word[1] +
+				',word:' + word[2] + '}';
+		} else if (typeof word === 'string') {
+			plain += words[i];
+		} else if (word === Skull.MISSING) {
+			plain += '{notfound}';
+		} else if (word === Skull.PIRATE) {
+			plain += '{pirate}';
+		} else {
+			throw new Error('Invalid word "' + word + '" found.');
+		}
+	}
+	
+	return plain;
+}
+
+CursedWordsTranslator.skullPairsToCPWs = function(skullPairs) {
+	var cpws = [];
+	
+	for (var i = 0; i < skullPairs.length; i++) {
+		var skull1 = skullPairs[i][0];
+		var skull2 = skullPairs[i][1];
+		
+		if (!skull2) {
+			// If there are an odd number of skulls,
+			// the last skull will be unpaired.
+			continue;
+		}
+		
+		cpws.push(skull1.type || skull2.type || [
 			(skull1.eyes + skull2.eyes)|0,
 			(skull1.horns + '' + skull1.teeth)|0,
 			(skull2.horns + '' + skull2.teeth)|0,
-		];
+		]);
 	}
+	
+	return cpws;
 };
 
 CursedWordsTranslator.cpwToSkullPair = function(chap, page, word) {
@@ -70,33 +129,34 @@ CursedWordsTranslator.cpwToSkullPair = function(chap, page, word) {
 	];
 };
 
-CursedWordsTranslator.prototype.markupToPlain = function(input) {
+CursedWordsTranslator.prototype.cpwsToPlain = function(cpws) {
 	var provider = this.provider;
-	return CursedWordsTranslator.makeTranslation(
-		(typeof input === 'string')
-			? CursedWordsTranslator.markupToCPWs(input)
-			: input,
-		
+	
+	return CursedWordsTranslator.makeTranslation(cpws,
 		function(cpw, indices, setWord, makeCallback, reject) {
 			if (Array.isArray(cpw)) {
-				provider.requestWord(cpw[0], cpw[1], cpw[2])
+				var request = provider.requestWord(cpw[0], cpw[1], cpw[2])
 					.onsuccess(makeCallback(indices))
-					.onerror(reject);
-			} else {
+					.onerror(makeCallback(indices, cpw));
+				
+				return request.abort.bind(request);
+			} else if (cpw === Skull.MISSING || cpw === Skull.PIRATE) {
 				setWord(indices);
+			} else {
+				reject(new Error('Invalid CPW at indices ' + indices));
 			}
 		});
 };
 
-CursedWordsTranslator.prototype.plainToSkullPairs = function(input) {
+CursedWordsTranslator.prototype.plainToSkullPairs = function(words) {
 	var avoidChaptersAbove4 = this.avoidChaptersAbove4;
 	var provider = this.provider;
 	
-	return CursedWordsTranslator.makeTranslation(
-		(typeof input === 'string')
-			? input.toLowerCase().match(CursedWordsTranslator.wordRE)
-			: input,
-		
+	if (typeof words === 'string') {
+		words = words.toLowerCase().match(CursedWordsTranslator.wordRE)
+	}
+	
+	return CursedWordsTranslator.makeTranslation(words,
 		function(word, indices, setWord, makeCallback, reject) {
 			var explicit = CursedWordsTranslator.explicitEntryRE.exec(word);
 			if (explicit) {
@@ -104,11 +164,11 @@ CursedWordsTranslator.prototype.plainToSkullPairs = function(input) {
 				setWord(indices,
 					CursedWordsTranslator.cpwToSkullPair(
 						+explicit[1], +explicit[2], +explicit[3]));
-			} else if (word.toUpperCase() === '{NOTFOUND}') {
+			} else if (word === '{notfound}') {
 				// Missing word
 				setWord(i, CursedWordsTranslator.missingSkullPair);
 			} else {
-				provider.requestOccurrences(word)
+				var request = provider.requestOccurrences(word)
 					.onsuccess(makeCallback(indices, function(indices, cpws) {
 						var range = cpws.length;
 						
@@ -138,7 +198,10 @@ CursedWordsTranslator.prototype.plainToSkullPairs = function(input) {
 						
 						return results;
 					}))
-					.onerror(reject);
+					.onerror(makeCallback(indices,
+						CursedWordsTranslator.missingSkullPair));
+				
+				return request.abort.bind(request);
 			}
 		});
 };
@@ -151,41 +214,43 @@ CursedWordsTranslator.Request = function(action) {
 	this._onsuccess = [];
 	this._onerror = [];
 	this._onabort = [];
+	this._isErrorCaught = false;
 	
 	function resolve(result) {
 		if (me.state !== CursedWordsTranslator.Request.RUNNING) {
-			throw 'Already finalized';
+			throw new Error('The request has already finalized.');
 		} else {
 			me.state = CursedWordsTranslator.Request.SUCCESS;
 		}
 		
 		me.result = result;
 		
-		for (var i = me._onsuccess.length - 1; i >= 0; i--) {
+		for (var i = 0; i < me._onsuccess.length; i++) {
 			me._onsuccess[i](result);
 		}
 	}
 	
 	function reject(error) {
 		if (me.state !== CursedWordsTranslator.Request.RUNNING) {
-			throw 'Already finalized';
+			throw new Error('The request has already finalized.');
 		} else {
 			me.state = CursedWordsTranslator.Request.ERROR;
 		}
 		
 		me.error = error;
 		
-		for (var i = me._onerror.length - 1; i >= 0; i--) {
+		if (!me._isErrorCaught) console.error(error);
+		for (var i = 0; i < me._onerror.length; i++) {
 			me._onerror[i](error);
 		}
 	}
 	
 	function progress(result) {
 		if (me.state !== CursedWordsTranslator.Request.RUNNING) {
-			throw 'Already finalized';
+			throw new Error('The request has already finalized.');
 		}
 		
-		for (var i = me._onprogress.length - 1; i >= 0; i--) {
+		for (var i = 0; i < me._onprogress.length; i++) {
 			me._onprogress[i](result);
 		}
 	}
@@ -199,19 +264,19 @@ CursedWordsTranslator.Request = function(action) {
 
 CursedWordsTranslator.Request.RUNNING = 0;
 CursedWordsTranslator.Request.SUCCESS = 1;
-CursedWordsTranslator.Request.ERROR = 2;
+CursedWordsTranslator.Request.ERROR   = 2;
 CursedWordsTranslator.Request.ABORTED = 3;
 
 CursedWordsTranslator.Request.prototype.abort = function() {
 	if (this.state !== CursedWordsTranslator.Request.RUNNING) {
-		throw 'Already finalized';
+		throw new Error('The request has already finalized.');
 	} else {
-		this._abort();
+		if (this._abort) this._abort();
 		
 		this.state = CursedWordsTranslator.Request.ABORTED;
 	}
 	
-	for (var i = this._onabort.length - 1; i >= 0; i--) {
+	for (var i = 0; i < this._onabort.length; i++) {
 		this._onabort[i]();
 	}
 };
@@ -231,6 +296,7 @@ CursedWordsTranslator.Request.prototype.onsuccess = function(callback) {
 };
 
 CursedWordsTranslator.Request.prototype.onerror = function(callback) {
+	this._isErrorCaught = true;
 	if (this.state === CursedWordsTranslator.Request.ERROR) {
 		callback(this.error);
 	} else {
@@ -248,7 +314,22 @@ CursedWordsTranslator.Request.prototype.onabort = function(callback) {
 	return this;
 };
 
+CursedWordsTranslator.Request.prototype.onfinalize = function(callback) {
+	if (this.state !== CursedWordsTranslator.Request.RUNNING) {
+		callback();
+	} else {
+		this._onsuccess.push(callback);
+		this._onerror.push(callback);
+		this._onabort.push(callback);
+	}
+	return this;
+}
+
 CursedWordsTranslator.makeTranslation = function Translation(input, process) {
+	if (input.length === 0) {
+		throw new Error('Passed zero-length input to a translation.');
+	}
+	
 	return new CursedWordsTranslator.Request(function(resolve, reject, progress) {
 		
 		var inputMap = Object.create(null);
@@ -280,6 +361,10 @@ CursedWordsTranslator.makeTranslation = function Translation(input, process) {
 					progress(output[curr], curr);
 				}
 			} else {
+				if (typeof index !== 'number') {
+					throw new Error('Tried to set word at index ' + index);
+				}
+				
 				// Single index
 				if (output[index] === undefined) numTranslated++;
 				output[index] = word || input[index];
@@ -297,31 +382,26 @@ CursedWordsTranslator.makeTranslation = function Translation(input, process) {
 			return false;
 		}
 		
-		// Returns a function that, when called:
-		//  - If `f` is provided, passes the index list and all arguments
-		//    to `f` and then:
-		//     - If result is a list, matches values to indices
-		//     - Else, inserts the result at all listed indices.
-		//  - If `f` is not provided, inserts its (one) argument directly at
-		//    all indices.
-		function makeCallback(indices, f) {
-			if (f) {
+		function makeCallback(indices, value) {
+			if (arguments.length > 1) {
 				return function() {
-					var args = [indices];
-					args.push.apply(args, arguments);
-					var value = f.apply(null, args);
-					
-					if (Array.isArray(value)) {
-						var lastOne = false;
+					if (typeof value === 'function') {
+						var args = [indices];
+						args.push.apply(args, arguments);
+						value = f.apply(null, args);
 						
-						for (var i = value.length - 1; i >= 0; i--) {
-							if (setWord(indices[i], value[i])) lastOne = true;
+						if (Array.isArray(value)) {
+							var lastOne = false;
+							
+							for (var i = value.length - 1; i >= 0; i--) {
+								if (setWord(indices[i], value[i])) lastOne = true;
+							}
+							
+							return lastOne;
 						}
-						
-						return lastOne;
-					} else {
-						return setWord(indices, value);
 					}
+					
+					return setWord(indices, value);
 				}
 			} else {
 				return function(word) {
@@ -330,13 +410,19 @@ CursedWordsTranslator.makeTranslation = function Translation(input, process) {
 			}
 		}
 		
+		var aborts = [];
+		
 		for (var key in inputMap) {
 			var curr = inputMap[key];
 			
-			process(curr.value, curr.indices, setWord, makeCallback, reject);
+			var abort = process(curr.value, curr.indices, setWord, makeCallback, reject);
+			if (abort) aborts.push(abort);
 		}
+		
+		return function() {
+			for (var i = aborts.length - 1; i >= 0; i--) {
+				aborts[i]();
+			}
+		};
 	});
 };
-
-this.CursedWordsTranslator = CursedWordsTranslator;
-}).call(this);

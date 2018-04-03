@@ -9,7 +9,7 @@ var markupInput, canvas, context, strawHat = new Image(84,77),
 	parenRegEx = /[\(\)]/;
 strawHat.src = 'pics/strawHatSkull.png';
 
-window.addEventListener('load',function(){
+window.addEventListener('DOMContentLoaded', function() {
 	markupInput = document.getElementById('markupInput');
 	canvas = document.getElementById('skullCanvas');
 	context = canvas.getContext('2d');
@@ -19,10 +19,11 @@ window.addEventListener('load',function(){
 	context.strokeStyle = '#FFF';
 	
 	updateSkullDisplay();
-	markupInput.addEventListener('input',updateSkullDisplay);
+	markupInput.addEventListener('input', updateSkullDisplay);
 });
 
-function updateSkullDisplay(skulls){
+function updateSkullDisplay(skulls) {
+	if (!context) return;
 	drawSkullArray(context, canvas, skulls || Skull.getAllInText(markupInput.value));
 }
 

@@ -1,4 +1,4 @@
-var dbAddress = 'https://ajaxgb.github.io/CursedWords/db/',
+var dbAddress = 'db/',
 	db = {index:{}},
 	wordRE = /\S+/g,
 	missingSkullPair = [{markup:'(X)'},{markup:'(X)'}],

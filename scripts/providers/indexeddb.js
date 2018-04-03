@@ -92,16 +92,20 @@ CursedWordsIDBProvider.prototype.requestWord = function(chapter, page, word) {
 		transaction.objectStore('pages')
 			.get([chapter, page])
 			.onsuccess = function() {
+				if (this.result === undefined) {
+					return reject(new Error("No such entry."));
+				}
+				
 				if (Array.isArray(word)) {
 					var results = [];
 					
 					for (var i = 0; i < word.length; i++) {
-						results[i] = this.result[word[i]];
+						results[i] = this.result[word[i - 1]];
 					}
 					
 					resolve(results);
 				} else {
-					resolve(this.result[word]);
+					resolve(this.result[word - 1]);
 				}
 			};
 		
@@ -119,6 +123,10 @@ CursedWordsIDBProvider.prototype.requestOccurrences = function(word) {
 		transaction.objectStore('index')
 			.get(word)
 			.onsuccess = function() {
+				if (this.result === undefined) {
+					return reject(new Error("No such entry."));
+				}
+				
 				resolve(this.result);
 			};
 		
@@ -138,6 +146,10 @@ CursedWordsIDBProvider.prototype.requestSuggestions = function(prefix, maxCount)
 		transaction.objectStore('index')
 			.openCursor(IDBKeyRange.bound(prefix, nextPrefix, false, true))
 			.onsuccess = function() {
+				if (this.result === undefined) {
+					return reject(new Error("No such entry."));
+				}
+				
 				if (this.result && this.result.key) {
 					result.push([
 						this.result.key,

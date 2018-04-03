@@ -32,16 +32,17 @@ VVVVVVVVVVVVV
 	<link rel="stylesheet" type="text/css" href="cursed.css">
 	<script src="scripts/skull.js"></script>
 	<script src="scripts/drawSkulls.js"></script>
-	<script src="scripts/translate.js"></script>
-	<script src="scripts/utility.js"></script>
-	<script src="scripts/providers/indexeddb.js"></script>
 	<script src="scripts/translator.js"></script>
+	<script src="scripts/providers/indexeddb.js"></script>
+	<script src="scripts/utility.js"></script>
+	<script src="scripts/page.js"></script>
 	
 	<script>
 		var cwTranslator;
-		CursedWordsIDBProvider.open("db/transcript.xml").onsuccess(function(provider) {
-			cwTranslator = new CursedWordsTranslator(provider);
-		});
+		var providerRequest = CursedWordsIDBProvider.open("db/transcript.xml")
+			.onsuccess(function(provider) {
+				translator = new CursedWordsTranslator(provider);
+			});
 	</script>
 	
 	<!-- Props to http://realfavicongenerator.net/ -->
