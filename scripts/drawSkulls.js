@@ -7,23 +7,23 @@ var markupInput, canvas, context, strawHat = new Image(84,77),
 	spaceXS = 60, spaceXL = 80, spaceY = 100, marginX = 32, marginY = 50,
 	xL = 2, xR = skullW-xL, xH = 17.5, xLineWeight = 6.5,
 	parenRegEx = /[\(\)]/;
-strawHat.src = "pics/strawHatSkull.png";
+strawHat.src = 'pics/strawHatSkull.png';
 
-window.addEventListener("load",function(){
-	markupInput = document.getElementById("markupInput");
-	canvas = document.getElementById("skullCanvas");
-	context = canvas.getContext("2d");
+window.addEventListener('load',function(){
+	markupInput = document.getElementById('markupInput');
+	canvas = document.getElementById('skullCanvas');
+	context = canvas.getContext('2d');
 	
-	context.lineCap = "round";
-	context.fillStyle = "#FFF";
-	context.strokeStyle = "#FFF";
+	context.lineCap = 'round';
+	context.fillStyle = '#FFF';
+	context.strokeStyle = '#FFF';
 	
 	updateSkullDisplay();
-	markupInput.addEventListener("input",updateSkullDisplay);
+	markupInput.addEventListener('input',updateSkullDisplay);
 });
 
-function updateSkullDisplay(){
-	drawSkullArray(context, canvas, getSkullArray(markupInput.value));
+function updateSkullDisplay(skulls){
+	drawSkullArray(context, canvas, skulls || Skull.getAllInText(markupInput.value));
 }
 
 function drawSkullArray(ctx, canvas, skulls){
@@ -58,7 +58,7 @@ function drawSkull(ctx, x, y, skull){
 	// Draw X if skull is missing
 	if(skull.missing){
 		ctx.fill();
-		ctx.strokeStyle = "#F00";
+		ctx.strokeStyle = '#F00';
 		ctx.lineWidth = xLineWeight;
 		ctx.beginPath();
 		ctx.moveTo(x+xL,y+xH);
@@ -66,7 +66,7 @@ function drawSkull(ctx, x, y, skull){
 		ctx.moveTo(x+xL,y-xH);
 		ctx.lineTo(x+xR,y+xH);
 		ctx.stroke();
-		ctx.strokeStyle = "#FFF";
+		ctx.strokeStyle = '#FFF';
 		return;
 	}
 	// Draw eyes
@@ -74,7 +74,7 @@ function drawSkull(ctx, x, y, skull){
 	var eyeX = x + eyeSpread - 2*bezNudge;
 	for(var i=0;i<marks[1].length;++i){
 		circle(ctx,eyeX,y,eyeR);
-		if(marks[1].charAt(i)==".") circle(ctx,eyeX,y,dotR);
+		if(marks[1].charAt(i)=='.') circle(ctx,eyeX,y,dotR);
 		eyeX += eyeSpread;
 	}
 	ctx.fill();
@@ -120,7 +120,7 @@ function drawSkull(ctx, x, y, skull){
 	ctx.beginPath();
 	var horns = [], curves = [];
 	for(var i=0;i<marks[0].length;++i){
-		if(marks[0].charAt(i)=="!"){
+		if(marks[0].charAt(i)=='!'){
 			horns[i] = -hornHL;
 			curves[i] = hornCL;
 		}else{

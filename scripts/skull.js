@@ -62,7 +62,7 @@ Skull.parseHorns = function(str) {
 	}
 	
 	return tally;
-}
+};
 
 Skull.unparseHorns = function(num) {
 	// Modified roman numeral generator.
@@ -84,7 +84,7 @@ Skull.unparseHorns = function(num) {
 	}
 	
 	return str;
-}
+};
 
 Skull.generateMarkup = function(horns, eyes, teeth, type) {
 	var markup = (type == Skull.PIRATE)
@@ -103,7 +103,7 @@ Skull.generateMarkup = function(horns, eyes, teeth, type) {
 	if (teeth|0) markup += teeth;
 	
 	return markup;
-}
+};
 
 Skull.getAllInText = function(input) {
 	var skulls = [], dat;
@@ -113,7 +113,7 @@ Skull.getAllInText = function(input) {
 	}
 	
 	return skulls;
-}
+};
 
 Skull.markupRE = /([.!]*|\uD83D\uDC52)\(([oO0.]*|[xX])\)(\d?)/g;
 Skull.hornRE = /^[.!]*$/;

@@ -27,14 +27,22 @@ VVVVVVVVVVVVV
 <head>
 	<meta charset="UTF-8">
 	<meta name=viewport content="width=device-width, initial-scale=1">
-	<title>Cursed Spirit Language Translator by /u/AjaxGb</title>
+	<title>Cursed Spirit Language Translator</title>
 	<link rel="manifest" href="manifest.json">
-	<base target="_blank">
 	<link rel="stylesheet" type="text/css" href="cursed.css">
 	<script src="scripts/skull.js"></script>
 	<script src="scripts/drawSkulls.js"></script>
 	<script src="scripts/translate.js"></script>
 	<script src="scripts/utility.js"></script>
+	<script src="scripts/providers/indexeddb.js"></script>
+	<script src="scripts/translator.js"></script>
+	
+	<script>
+		var cwTranslator;
+		CursedWordsIDBProvider.open("db/transcript.xml").onsuccess(function(provider) {
+			cwTranslator = new CursedWordsTranslator(provider);
+		});
+	</script>
 	
 	<!-- Props to http://realfavicongenerator.net/ -->
 	<link rel="apple-touch-icon" sizes="57x57" href="icon/apple-touch-icon-57x57.png">
