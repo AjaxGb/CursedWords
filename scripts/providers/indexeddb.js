@@ -50,7 +50,7 @@ CursedWordsIDBProvider.open = function(transcriptUrl, dbName, dbVersion) {
 				var transaction = db.transaction(
 					['pages', 'index'], 'readwrite');
 				
-				populateDB(
+				populateIDb(
 					transaction.objectStore('pages'),
 					transaction.objectStore('index'),
 					transcriptReq.response.documentElement);
@@ -171,6 +171,8 @@ CursedWordsIDBProvider.prototype.requestSuggestions = function(prefix, maxCount)
 	});
 };
 
+var wordRE = /\S+/g;
+
 function populateIDb(pageStore, indexStore, xmlRoot) {	
 	var index = Object.create(null);
 	// Iter chapters
@@ -190,6 +192,7 @@ function populateIDb(pageStore, indexStore, xmlRoot) {
 			for (var textEl = pageEl.firstChild; textEl;
 					textEl = textEl.nextSibling) {
 				
+				var reResult;
 				if (textEl.nodeType === Node.TEXT_NODE) {
 					// Normal text. Add to both page and index.
 					while (reResult = wordRE.exec(textEl.nodeValue)) {
