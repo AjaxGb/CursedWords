@@ -139,7 +139,11 @@ CursedWordsTranslator.prototype.cpwsToPlain = function(cpws) {
 					.onsuccess(makeCallback(indices))
 					.onerror(makeCallback(indices, cpw));
 				
-				return request.abort.bind(request);
+				return function() {
+					if (request.state === CursedWordsTranslator.Request.RUNNING) {
+						request.abort();
+					}
+				};
 			} else if (cpw === Skull.MISSING || cpw === Skull.PIRATE) {
 				setWord(indices);
 			} else {
@@ -201,7 +205,11 @@ CursedWordsTranslator.prototype.plainToSkullPairs = function(words) {
 					.onerror(makeCallback(indices,
 						CursedWordsTranslator.missingSkullPair));
 				
-				return request.abort.bind(request);
+				return function() {
+					if (request.state === CursedWordsTranslator.Request.RUNNING) {
+						request.abort();
+					}
+				};
 			}
 		});
 };
