@@ -61,7 +61,7 @@ textarea {
 }
 
 .suggestions {
-	display: none;
+	display: block;
 	position: absolute;
     top: 80%;
 	left: 0px;
@@ -79,8 +79,8 @@ textarea {
 	z-index: 1;
 }
 
-textarea:focus + .suggestions {
-	display: block;
+.suggestions:empty {
+	display: none;
 }
 
 .suggestions li {

@@ -13,7 +13,22 @@ CursedWordsTranslator.wordRE = /\S+/g;
 CursedWordsTranslator.explicitEntryRE = /^{(?:\w+:)?(\d+),(?:\w+:)?(\d+),(?:\w+:)?(\d+)}$/;
 
 CursedWordsTranslator.missingSkull = new Skull(0, 'X', 0);
-CursedWordsTranslator.missingSkullPair = [CursedWordsTranslator.missingSkull, CursedWordsTranslator.missingSkull];
+CursedWordsTranslator.missingSkullPair = [
+	CursedWordsTranslator.missingSkull, CursedWordsTranslator.missingSkull
+];
+
+CursedWordsTranslator.blankSkull = new Skull(0, '', 0);
+CursedWordsTranslator.blankSkullPair = [
+	CursedWordsTranslator.blankSkull, CursedWordsTranslator.blankSkull
+];
+
+CursedWordsTranslator.makeBlankSkullArray = function(numPairs) {
+	var arr = [];
+	for (; numPairs > 0; numPairs--) {
+		arr.push(CursedWordsTranslator.blankSkullPair);
+	}
+	return arr;
+};
 
 CursedWordsTranslator.markupToSkullPairs = function(markup) {
 	var skulls = Skull.getAllInText(markup);
@@ -45,7 +60,7 @@ CursedWordsTranslator.skullPairsToMarkup = function(skullPairs, pairsPerLine) {
 };
 
 CursedWordsTranslator.plainToWords = function(plain) {
-	var words = words.toLowerCase().match(CursedWordsTranslator.wordRE);
+	var words = plain.toLowerCase().match(CursedWordsTranslator.wordRE);
 	
 	for (var i = words.length - 1; i >= 0; i--) {
 		words[i]
@@ -69,11 +84,11 @@ CursedWordsTranslator.wordsToPlain = function(words) {
 				',page:' + word[1] +
 				',word:' + word[2] + '}';
 		} else if (typeof word === 'string') {
-			plain += words[i];
+			plain += words[i].toUpperCase();
 		} else if (word === Skull.MISSING) {
-			plain += '{notfound}';
+			plain += '{NOTFOUND}';
 		} else if (word === Skull.PIRATE) {
-			plain += '{pirate}';
+			plain += '{PIRATE}';
 		} else {
 			throw new Error('Invalid word "' + word + '" found.');
 		}
@@ -129,7 +144,11 @@ CursedWordsTranslator.cpwToSkullPair = function(chap, page, word) {
 	];
 };
 
-CursedWordsTranslator.prototype.cpwsToPlain = function(cpws) {
+CursedWordsTranslator.cpwToURL = function(cpw) {
+	return 'http://www.paranatural.net/comic/chapter-'+cpw[0]+'-page-'+cpw[1];	
+};
+
+CursedWordsTranslator.prototype.cpwsToWords = function(cpws) {
 	var provider = this.provider;
 	
 	return CursedWordsTranslator.makeTranslation(cpws,
@@ -152,7 +171,7 @@ CursedWordsTranslator.prototype.cpwsToPlain = function(cpws) {
 		});
 };
 
-CursedWordsTranslator.prototype.plainToSkullPairs = function(words) {
+CursedWordsTranslator.prototype.wordsToSkullPairs = function(words) {
 	var avoidChaptersAbove4 = this.avoidChaptersAbove4;
 	var provider = this.provider;
 	
@@ -214,6 +233,10 @@ CursedWordsTranslator.prototype.plainToSkullPairs = function(words) {
 		});
 };
 
+CursedWordsTranslator.prototype.getSuggestions = function(prefix, maxCount) {
+	return this.provider.requestSuggestions(prefix.toLowerCase(), maxCount);
+};
+
 CursedWordsTranslator.Request = function(action) {
 	var me = this;
 	
@@ -234,7 +257,7 @@ CursedWordsTranslator.Request = function(action) {
 		me.result = result;
 		
 		for (var i = 0; i < me._onsuccess.length; i++) {
-			me._onsuccess[i](result);
+			me._onsuccess[i].apply(me, arguments);
 		}
 	}
 	
@@ -249,17 +272,19 @@ CursedWordsTranslator.Request = function(action) {
 		
 		if (!me._isErrorCaught) console.error(error);
 		for (var i = 0; i < me._onerror.length; i++) {
-			me._onerror[i](error);
+			me._onerror[i].apply(me, arguments);
 		}
 	}
 	
-	function progress(result) {
+	function progress() {
+		// Takes an arbitrary number of arguments
+		
 		if (me.state !== CursedWordsTranslator.Request.RUNNING) {
 			throw new Error('The request has already finalized.');
 		}
 		
 		for (var i = 0; i < me._onprogress.length; i++) {
-			me._onprogress[i](result);
+			me._onprogress[i].apply(me, arguments);
 		}
 	}
 	
@@ -285,7 +310,7 @@ CursedWordsTranslator.Request.prototype.abort = function() {
 	}
 	
 	for (var i = 0; i < this._onabort.length; i++) {
-		this._onabort[i]();
+		this._onabort[i].call(me);
 	}
 };
 
@@ -396,7 +421,7 @@ CursedWordsTranslator.makeTranslation = function Translation(input, process) {
 					if (typeof value === 'function') {
 						var args = [indices];
 						args.push.apply(args, arguments);
-						value = f.apply(null, args);
+						value = value.apply(null, args);
 						
 						if (Array.isArray(value)) {
 							var lastOne = false;

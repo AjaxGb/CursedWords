@@ -1,17 +1,6 @@
 (function() {
 'use strict';
 
-function incrementString(str) {
-	if (str) {
-		// The \uFFFF character is a reserved non-character,
-		// so overflow shouldn't be an issue.
-		return str.slice(0, -1)
-			+ String.fromCharCode(str.charCodeAt(str.length - 1) + 1);
-	} else {
-		return '\0';
-	}
-}
-
 function CursedWordsIDBProvider(db) {
 	throw new Error(
 		'Do not call the constructor directly! Use CursedWordsIDBProvider.open() instead.');
@@ -136,22 +125,23 @@ CursedWordsIDBProvider.prototype.requestOccurrences = function(word) {
 
 CursedWordsIDBProvider.prototype.requestSuggestions = function(prefix, maxCount) {
 	maxCount = maxCount || 10;
-	var nextPrefix = incrementString(prefix);
 	var db = this.db;
 	
 	return new CursedWordsTranslator.Request(function(resolve, reject) {
 		var transaction = db.transaction('index');
 		transaction.onerror = reject;
 		
+		var suggestions = [];
+		
 		transaction.objectStore('index')
-			.openCursor(IDBKeyRange.bound(prefix, nextPrefix, false, true))
+			.openCursor(IDBKeyRange.bound(prefix, prefix + '\uFFFF'))
 			.onsuccess = function() {
 				if (this.result === undefined) {
 					return reject(new Error("No such entry."));
 				}
 				
 				if (this.result && this.result.key) {
-					result.push([
+					suggestions.push([
 						this.result.key,
 						this.result.key === prefix
 							? Infinity // Ensure typed word is
@@ -159,7 +149,7 @@ CursedWordsIDBProvider.prototype.requestSuggestions = function(prefix, maxCount)
 							: this.result.value.length]);
 					this.result.continue();
 				} else {
-					resolve(result.sort(function(a, b) {
+					resolve(suggestions.sort(function(a, b) {
 						return b[1] - a[1];
 					}).slice(0, maxCount).map(function(a) {
 						return a[0];

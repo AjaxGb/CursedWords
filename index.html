@@ -34,11 +34,12 @@ VVVVVVVVVVVVV
 	<script src="scripts/drawSkulls.js"></script>
 	<script src="scripts/translator.js"></script>
 	<script src="scripts/providers/indexeddb.js"></script>
+	<script src="scripts/suggestions.js"></script>
 	<script src="scripts/utility.js"></script>
 	<script src="scripts/page.js"></script>
 	
 	<script>
-		var cwTranslator;
+		var translator;
 		var providerRequest = CursedWordsIDBProvider.open("db/transcript.xml")
 			.onsuccess(function(provider) {
 				translator = new CursedWordsTranslator(provider);
