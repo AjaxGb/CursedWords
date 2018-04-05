@@ -21,6 +21,12 @@ CursedWordsIDBProvider.open = function(transcriptUrl, dbName, dbVersion) {
 			console.log('Database is out of date');
 			var db = dbOpen.result;
 			
+			db.onversionchange = function() {
+				db.close();
+				window.location.reload();
+				alert('Database version changed in another tab! Reload required.');
+			}
+			
 			if (e.oldVersion < 1) {
 				var pageStore = db.createObjectStore('pages');
 				var indexStore = db.createObjectStore('index');
@@ -79,7 +85,7 @@ CursedWordsIDBProvider.prototype.requestWord = function(chapter, page, word) {
 		transaction.onerror = reject;
 		
 		transaction.objectStore('pages')
-			.get([chapter, page])
+			.get(chapter + ',' + page)
 			.onsuccess = function() {
 				if (this.result === undefined) {
 					return reject(new Error("No such entry."));
@@ -204,7 +210,7 @@ function populateIDb(pageStore, indexStore, xmlRoot) {
 				}
 			}
 			
-			pageStore.add(currPage, [chapNum, pageNum]);
+			pageStore.add(currPage, chapNum + ',' + pageNum);
 		}
 	}
 
