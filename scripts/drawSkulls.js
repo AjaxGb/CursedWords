@@ -67,6 +67,7 @@ SkullRenderer.strawHat.src = 'pics/strawHatSkull.png';
 SkullRenderer.prototype.drawSkullPairs = function(skullPairs) {
 	
 	this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+	if (!skullPairs || !skullPairs.length) return;
 	
 	var x = MAGIC.marginX;
 	var y = MAGIC.marginY;
