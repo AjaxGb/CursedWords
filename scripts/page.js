@@ -2,7 +2,7 @@
 
 var markupInput, plainInput, manualInput, preferChaptersBelow4Input;
 var suggestions, plainSuggest;
-var displaySkulls;
+var displaySkulls, skullRenderer;
 var translationRequest;
 
 function updateDisplaySkulls(skullPairs, normalizeMarkup) {
@@ -17,6 +17,10 @@ function updateDisplaySkulls(skullPairs, normalizeMarkup) {
 	
 	if (normalizeMarkup) {
 		markupInput.value = CursedWordsTranslator.skullPairsToMarkup(displaySkulls);
+	}
+	
+	if (skullRenderer) {
+		skullRenderer.drawSkullPairs(displaySkulls);
 	}
 }
 
@@ -47,6 +51,7 @@ function markupToPlain() {
 		return;
 	}
 	
+	if (cpws.length === 0) return;
 	translationRequest = translator.cpwsToWords(cpws);
 	translationRequest
 		.onfinalize(function() {
@@ -72,6 +77,7 @@ function plainToMarkup() {
 	
 	if (translationRequest) translationRequest.abort();
 	
+	if (words.length === 0) return;
 	translationRequest = translator.wordsToSkullPairs(words);
 	translationRequest
 		.onfinalize(function() {
@@ -97,6 +103,8 @@ window.addEventListener('DOMContentLoaded', function() {
 	manualInput = document.getElementById('manualCheck');
 	preferChaptersBelow4Input = document.getElementById('preferCh4Check');
 	
+	skullRenderer = new SkullRenderer(document.getElementById('skullCanvas'));
+	
 	var query = getQueryArgs();
 	if(Object.keys(query).length) {
 		
@@ -119,12 +127,16 @@ window.addEventListener('DOMContentLoaded', function() {
 		
 		document.getElementById('markupButton').onclick = markupToPlain;
 		
-		markupInput.onkeydown = function(e) {
+		plainInput.addEventListener('keydown', function(e) {
 			if((e.key === 'Enter' || e.keyCode === 13) && e.ctrlKey){
 				markupToPlain();
 				e.preventDefault();
 			}
-		};
+		});
+		
+		markupInput.addEventListener('input', function() {
+			updateDisplaySkulls(markupInput.value, false);
+		});
 		
 		document.getElementById('plainButton').onclick = plainToMarkup;
 		

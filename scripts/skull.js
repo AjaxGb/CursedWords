@@ -1,43 +1,66 @@
 'use strict';
 
 function Skull(horns, eyes, teeth, markup) {
+	this.markup = {};
+	
 	// Horns
-	if (Skull.hornRE.test(horns)) {
+	if (typeof eyes === 'string' && Skull.hornRE.test(horns)) {
 		// Unparsed normal horns
 		this.horns = Skull.parseHorns(horns);
+		this.markup.horns = horns;
 	} else if (horns == '\uD83D\uDC52') {
 		// Straw hat easter egg
 		this.type = Skull.PIRATE;
-		this.markup = markup
-			|| Skull.generateMarkup(0, eyes, teeth, this.type);
-		return;
+		this.horns = NaN;
+		this.markup.horns = horns;
 	} else {
 		// Number of horns
-		this.horns = horns|0;
+		this.horns = Math.max(horns|0, 0);
+		this.markup.horns = Skull.unparseHorns(this.horns);
 	}
 	
 	// Eyes
-	if (Skull.eyeRE.test(eyes)) {
+	if (typeof eyes === 'string' && Skull.eyeRE.test(eyes)) {
 		// Unparsed normal eyes
 		this.eyes = 0;
 		for (var i = eyes.length - 1; i >= 0; i--) {
 			if (eyes[i] === '.') this.eyes++;
 		}
+		this.markup.eyes = eyes + '';
 	} else if (eyes === 'X' || eyes === 'x') {
 		// Special "missing" skull
 		this.type = Skull.MISSING;
-		this.markup = markup
-			|| Skull.generateMarkup(horns, 0, teeth, this.type);
-		return;
+		this.eyes = NaN;
+		this.markup.eyes = eyes;
 	} else {
 		// Number of filled eyes
-		this.eyes = eyes|0;
+		this.eyes = eyes = Math.max(eyes|0, 0);
+		
+		if (eyes === 2) {
+			this.markup.eyes = '..';
+		} else if (eyes === 1) {
+			if (Math.random() > 0.5) {
+				this.markup.eyes = 'o.';
+			} else {
+				this.markup.eyes = '.o';
+			}
+		} else if (eyes <= 0) {
+			this.markup.eyes = 'oo';
+		} else {
+			var temp = '';
+			while (eyes--) {
+				temp += '.';
+			}
+			this.markup.eyes = temp;
+		}
 	}
 	
-	this.teeth = teeth|0;
-	this.markup = markup
-		|| Skull.generateMarkup(this.horns, this.eyes, this.teeth);
-	this.type = Skull.NORMAL;
+	this.teeth = Math.min(Math.max(teeth|0, 0), 9);
+	this.markup.teeth = (this.teeth) ? this.teeth + '' : '';
+	
+	this.markup.whole = markup ||
+		this.markup.horns + '(' + this.markup.eyes + ')' + this.markup.teeth;
+	this.type = this.type || Skull.NORMAL;
 }
 
 Skull.parseHorns = function(str) {
@@ -84,25 +107,6 @@ Skull.unparseHorns = function(num) {
 	}
 	
 	return str;
-};
-
-Skull.generateMarkup = function(horns, eyes, teeth, type) {
-	var markup = (type == Skull.PIRATE)
-		? '\uD83D\uDC52('
-		: Skull.unparseHorns(horns) + '(';
-	
-	eyes |= 0;
-	if(type == Skull.MISSING) markup += 'X';
-	else if (eyes <= 0) markup += 'oo';
-	else if (eyes == 2) markup += '..';
-	else if (eyes == 1) {
-		markup += (Math.random() > 0.5) ? 'o.' : '.o';
-	} else while(eyes--) markup += '.';
-	
-	markup += ')'
-	if (teeth|0) markup += teeth;
-	
-	return markup;
 };
 
 Skull.getAllInText = function(input) {

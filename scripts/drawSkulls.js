@@ -1,216 +1,386 @@
-var markupInput, canvas, context, strawHat = new Image(84,77),
-	skullW = 50, skullH = 24, bezNudge = 2, eyeR = 7.2, dotR = 3.2,
-	jawI = 10, jawSmI = 12, jawDmin = 32, jawDmax = 36, jawUmin = 13, jawUmax = 17,
-	teethGap = 10, teethHS = 6, teethHL = 10, teethLineWeight = 5,
-	scalpI = 2, scalpMin = 8, scalpMax = 20,
-	hornHS = 8, hornHL = 18, hornCL = 4, hornCS = 1.5, hornLineWeight = 4.4,
-	spaceXS = 60, spaceXL = 80, spaceY = 100, marginX = 32, marginY = 50,
-	xL = 2, xR = skullW-xL, xH = 17.5, xLineWeight = 6.5,
-	parenRegEx = /[\(\)]/;
-strawHat.src = 'pics/strawHatSkull.png';
+(function() {
+'use strict';
 
-window.addEventListener('DOMContentLoaded', function() {
-	markupInput = document.getElementById('markupInput');
-	canvas = document.getElementById('skullCanvas');
-	context = canvas.getContext('2d');
+var MAGIC = {
+	marginX: 32,
+	marginY: 50,
 	
-	context.lineCap = 'round';
-	context.fillStyle = '#FFF';
-	context.strokeStyle = '#FFF';
+	inPairSpacing: 60,
+	betweenPairsSpacing: 80,
+	lineSpacing: 100,
 	
-	updateSkullDisplay();
-	markupInput.addEventListener('input', updateSkullDisplay);
-});
+	skullWidth: 50,
+	skullHeight: 24,
+	
+	bezierNudge: 2,
+	
+	eyeRadius: 7.2,
+	dotRadius: 3.2,
+	
+	jawNormalXInset: 10,
+	jawSmallXInset: 12,
+	
+	lowerJawMinY: 32,
+	lowerJawMaxY: 36,
+	upperJawMinY: 13,
+	upperJawMaxY: 17,
+	
+	teethGap: 10,
+	teethLengthShort: 6,
+	teethLengthLong: 10,
+	
+	jawLineWeight: 5,
+	teethLineWeight: 4.5,
+	
+	scalpXInsetEnd: 1,
+	scalpXInsetMiddle: 12,
+	scalpMin: 8,
+	scalpMax: 20,
+	
+	hornLengthShort: 8,
+	hornLengthLong: 18,
+	hornCurveShort: 0,
+	hornCurveLong: 4,
+	
+	hornLineWeight: 4.4,
+	
+	xLeft: 2,
+	xRight: 48,
+	xHeight: 17.5,
+	xLineWeight: 6.5,
+};
 
-function updateSkullDisplay(skulls) {
-	if (!context) return;
-	drawSkullArray(context, canvas, skulls || Skull.getAllInText(markupInput.value));
+function SkullRenderer(canvas) {
+	this.canvas = canvas;
+	this.ctx = canvas.getContext('2d');
+	
+	this.ctx.lineCap = 'round';
+	this.ctx.fillStyle = '#FFF';
+	this.ctx.strokeStyle = '#FFF';
+	
+	this.cache = Object.create(null);
 }
 
-function drawSkullArray(ctx, canvas, skulls){
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	var i, x = marginX, y = marginY;
-	for(i=1;i<skulls.length;i+=2){ // By twos
-		drawSkull(ctx, x, y, skulls[i-1]);
-		x += spaceXS;
-		drawSkull(ctx, x, y, skulls[i]);
-		x += spaceXL;
-		if(x+spaceXS+skullW+marginX >= canvas.width){
-			x = marginX;
-			y += spaceY;
+SkullRenderer.strawHat = new Image(84, 77);
+SkullRenderer.strawHat.src = 'pics/strawHatSkull.png';
+
+SkullRenderer.prototype.drawSkullPairs = function(skullPairs) {
+	
+	this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+	
+	var x = MAGIC.marginX;
+	var y = MAGIC.marginY;
+	
+	for (var i = 0; i < skullPairs.length; i++) {
+		
+		this.drawSkull(x, y, skullPairs[i][0]);
+		
+		x += MAGIC.inPairSpacing;
+		
+		if (skullPairs[i].length > 1) {
+			this.drawSkull(x, y, skullPairs[i][1]);
+		}
+		
+		x += MAGIC.betweenPairsSpacing;
+		
+		if (x + MAGIC.inPairSpacing + MAGIC.skullWidth + MAGIC.marginX >=
+			this.canvas.width) {
+			
+			x = MAGIC.marginX;
+			y += MAGIC.lineSpacing;
 		}
 	}
-	if(i-1 < skulls.length){
-		drawSkull(ctx, x, y, skulls[i-1]);
-	}
-}
+};
 
-function drawSkull(ctx, x, y, skull){
-	if(skull.piece == 1){
-		ctx.drawImage(strawHat,x-17,y-35,84,77);
+SkullRenderer.prototype.drawSkull = function(x, y, skull) {
+	var normalizedMarkup = skull.markup.whole;
+	if (!skull.markup.teeth) normalizedMarkup += '0';
+	this.cache[normalizedMarkup] = true;
+	
+	// Draw custom pirate image if skull is piratical
+	if (skull.type == Skull.PIRATE) {
+		this.ctx.drawImage(SkullRenderer.strawHat, x - 17, y - 35, 84, 77);
 		return;
 	}
-	var marks = skull.markup.split(parenRegEx);
+	
+	var horns = skull.markup.horns;
+	var eyes = skull.markup.eyes;
+	var teeth = skull.teeth;
+	var ctx = this.ctx;
+	
 	// Draw main skull
 	ctx.beginPath();
-	ctx.moveTo(x,y);
-	ctx.bezierCurveTo(x-bezNudge,y+skullH,x+skullW+bezNudge,y+skullH,x+skullW,y);
-	ctx.bezierCurveTo(x+skullW+bezNudge,y-skullH,x-bezNudge,y-skullH,x,y);
-	// Draw X if skull is missing
-	if(skull.missing){
+	ctx.moveTo(x, y);
+	ctx.bezierCurveTo( // Top
+		x - MAGIC.bezierNudge,
+		y + MAGIC.skullHeight,
+		x + MAGIC.skullWidth + MAGIC.bezierNudge,
+		y + MAGIC.skullHeight,
+		x + MAGIC.skullWidth,
+		y);
+	ctx.bezierCurveTo( // Bottom
+		x + MAGIC.skullWidth + MAGIC.bezierNudge,
+		y - MAGIC.skullHeight,
+		x - MAGIC.bezierNudge,
+		y - MAGIC.skullHeight,
+		x,
+		y);
+	
+	// Draw X and stop if skull is missing
+	if (skull.type === Skull.MISSING) {
 		ctx.fill();
+		
 		ctx.strokeStyle = '#F00';
-		ctx.lineWidth = xLineWeight;
+		ctx.lineCap = 'square';
+		ctx.lineWidth = MAGIC.xLineWeight;
+		
 		ctx.beginPath();
-		ctx.moveTo(x+xL,y+xH);
-		ctx.lineTo(x+xR,y-xH);
-		ctx.moveTo(x+xL,y-xH);
-		ctx.lineTo(x+xR,y+xH);
+		
+		ctx.moveTo(
+			x + MAGIC.xLeft,
+			y + MAGIC.xHeight);
+		ctx.lineTo(
+			x + MAGIC.xRight,
+			y - MAGIC.xHeight);
+		
+		ctx.moveTo(
+			x + MAGIC.xLeft,
+			y - MAGIC.xHeight);
+		ctx.lineTo(
+			x + MAGIC.xRight,
+			y + MAGIC.xHeight);
+		
 		ctx.stroke();
 		ctx.strokeStyle = '#FFF';
+		ctx.lineCap = 'round';
 		return;
 	}
+	
 	// Draw eyes
-	var eyeSpread = (skullW+4*bezNudge) / (marks[1].length+1);
-	var eyeX = x + eyeSpread - 2*bezNudge;
-	for(var i=0;i<marks[1].length;++i){
-		circle(ctx,eyeX,y,eyeR);
-		if(marks[1].charAt(i)=='.') circle(ctx,eyeX,y,dotR);
+	var eyeSpread = (MAGIC.skullWidth + 4 * MAGIC.bezierNudge) / (eyes.length + 1);
+	var eyeX = x + eyeSpread - 2 * MAGIC.bezierNudge;
+	
+	for (var i = 0; i < eyes.length; i++) {
+		circle(ctx, eyeX, y, MAGIC.eyeRadius);
+		if (eyes[i] === '.') {
+			circle(ctx, eyeX, y, MAGIC.dotRadius);
+		}
 		eyeX += eyeSpread;
 	}
+	
 	ctx.fill();
+	
 	// Draw teeth
-	var teeth = parseInt(marks[2],10), topTeeth, botTeeth;
-	ctx.lineWidth = teethLineWeight;
-	ctx.beginPath();
-	if(teeth>4){
-		topTeeth = botTeeth = Math.floor(teeth/2);
-		if(teeth%2==1) ++botTeeth;
-		if(botTeeth==3){
-			ctx.moveTo(x+jawSmI,y+jawDmin);
-			ctx.bezierCurveTo(
-				x+jawSmI,y+jawDmax,
-				x+skullW-jawSmI,y+jawDmax,
-				x+skullW-jawSmI,y+jawDmin);
-		}else{
-			ctx.moveTo(x+jawI,y+jawDmin);
-			ctx.bezierCurveTo(
-				x+jawI,y+jawDmax,
-				x+skullW-jawI,y+jawDmax,
-				x+skullW-jawI,y+jawDmin);
-		}
+	var topTeeth, bottomTeeth;
+	
+	if (teeth > 4) {
+		// Some above, some below
+		topTeeth = bottomTeeth = Math.floor(teeth / 2);
+		if (teeth % 2 === 1) bottomTeeth++;
+		
+		// 3 is the smallest number of lower teeth possible;
+		// draw a slightly smaller lower jaw.
+		var lowerJawXInset = (bottomTeeth === 3)
+			? MAGIC.jawSmallXInset
+			: MAGIC.jawNormalXInset;
+		
+		// Draw lower jaw
+		ctx.lineWidth = MAGIC.jawLineWeight;
+		ctx.beginPath();
+		
+		ctx.moveTo(
+			x + lowerJawXInset,
+			y + MAGIC.lowerJawMinY);
+		ctx.bezierCurveTo(
+			x + lowerJawXInset,
+			y + MAGIC.lowerJawMaxY,
+			x + MAGIC.skullWidth - lowerJawXInset,
+			y + MAGIC.lowerJawMaxY,
+			x + MAGIC.skullWidth - lowerJawXInset,
+			y + MAGIC.lowerJawMinY);
+		
+		ctx.stroke();
+		
+		// Draw lower teeth
+		ctx.lineWidth = MAGIC.teethLineWeight;
+		ctx.beginPath();
+		
 		drawSpikes(ctx,
-			x+jawI,y+jawDmin,
-			x+jawI,y+jawDmax,
-			x+skullW-jawI,y+jawDmax,
-			x+skullW-jawI,y+jawDmin,
-			filledArray(-teethHS, botTeeth));
-	}else{
+			x + MAGIC.jawNormalXInset,
+			y + MAGIC.lowerJawMinY,
+			x + MAGIC.jawNormalXInset,
+			y + MAGIC.lowerJawMaxY,
+			x + MAGIC.skullWidth - MAGIC.jawNormalXInset,
+			y + MAGIC.lowerJawMaxY,
+			x + MAGIC.skullWidth - MAGIC.jawNormalXInset,
+			y + MAGIC.lowerJawMinY,
+			bottomTeeth, -MAGIC.teethLengthShort);
+	} else {
+		// No lower jaw
 		topTeeth = teeth;
-		botTeeth = 0;
+		bottomTeeth = 0;
+		
+		ctx.lineWidth = MAGIC.teethLineWeight;
+		ctx.beginPath();
 	}
+	
+	// Draw upper teeth
 	drawSpikes(ctx,
-		x+jawI,y+jawUmin,
-		x+jawI,y+jawUmax,
-		x+skullW-jawI,y+jawUmax,
-		x+skullW-jawI,y+jawUmin,
-		filledArray(botTeeth>0 ? teethHS:teethHL, topTeeth));
+		x + MAGIC.jawNormalXInset,
+		y + MAGIC.upperJawMinY,
+		x + MAGIC.jawNormalXInset,
+		y + MAGIC.upperJawMaxY,
+		x + MAGIC.skullWidth - MAGIC.jawNormalXInset,
+		y + MAGIC.upperJawMaxY,
+		x + MAGIC.skullWidth - MAGIC.jawNormalXInset,
+		y + MAGIC.upperJawMinY,
+		topTeeth, bottomTeeth > 0 ? MAGIC.teethLengthShort : MAGIC.teethLengthLong);
 	ctx.stroke();
+	
 	// Draw horns
-	ctx.lineWidth = hornLineWeight;
+	ctx.lineWidth = MAGIC.hornLineWeight;
 	ctx.beginPath();
-	var horns = [], curves = [];
-	for(var i=0;i<marks[0].length;++i){
-		if(marks[0].charAt(i)=='!'){
-			horns[i] = -hornHL;
-			curves[i] = hornCL;
-		}else{
-			horns[i] = -hornHS;
-			curves[i] = hornCS;
+	
+	var hornLengths = [], curves = [];
+	for (var i = 0; i < horns.length; i++) {
+		if (horns[i] === '!') {
+			hornLengths[i] = -MAGIC.hornLengthLong;
+			curves[i] = MAGIC.hornCurveLong;
+		} else {
+			hornLengths[i] = -MAGIC.hornLengthShort;
+			curves[i] = MAGIC.hornCurveShort;
 		}
 	}
+	
 	drawSpikes(ctx,
-		x+scalpI,y-scalpMin,
-		x+scalpI,y-scalpMax,
-		x+skullW-scalpI,y-scalpMax,
-		x+skullW-scalpI,y-scalpMin,
-		horns, curves);
+		x + MAGIC.scalpXInsetEnd,
+		y - MAGIC.scalpMin,
+		x + MAGIC.scalpXInsetMiddle,
+		y - MAGIC.scalpMax,
+		x + MAGIC.skullWidth - MAGIC.scalpXInsetMiddle,
+		y - MAGIC.scalpMax,
+		x + MAGIC.skullWidth - MAGIC.scalpXInsetEnd,
+		y - MAGIC.scalpMin,
+		horns.length, hornLengths, curves);
 	ctx.stroke();
-	return true;
 }
 
-function circle(ctx, x, y, r){
-	ctx.moveTo(x+r,y);
-	ctx.arc(x,y,r,0,2*Math.PI);
+function circle(ctx, x, y, r) {
+	ctx.moveTo(x + r, y);
+	ctx.arc(x, y, r, 0, 2 * Math.PI);
 }
 
-var spikePosCache = [
-	[],                                     //0
-	[0.5],                                  //1
-	[0.37,0.63],                            //2
-	[0.15,0.5,0.85],                        //3
-	[0,0.37,0.63,1],                        //4
-	[0,0.32,0.5,0.68,1],                    //5
-	[0,0.28,0.43,0.57,0.72,1],              //6
-	[0,0.25,0.38,0.5,0.62,0.75,1],          //7
-	[0,0.23,0.35,0.45,0.55,0.65,0.77,1],    //8
-	[0,0.21,0.33,0.43,0.5,0.57,0.67,0.79,1] //9
+var teethTCache = [
+	                          [],                          //0
+	                        [0.50],                        //1
+	                     [0.37, 0.63],                     //2
+	                  [0.15, 0.50, 0.85],                  //3
+	               [0.00, 0.37, 0.63, 1.00],               //4
+	            [0.00, 0.32, 0.50, 0.68, 1.00],            //5
+	         [0.00, 0.28, 0.43, 0.57, 0.72, 1.00],         //6
+	      [0.00, 0.25, 0.38, 0.50, 0.62, 0.75, 1.00],      //7
+	   [0.00, 0.23, 0.35, 0.45, 0.55, 0.65, 0.77, 1.00],   //8
+	[0.00, 0.21, 0.33, 0.43, 0.50, 0.57, 0.67, 0.79, 1.00] //9
 ];
-function drawSpikes(ctx,p0x,p0y,c0x,c0y,c1x,c1y,p1x,p1y,lengths,curves){
-	var ptOn, t, curveMul;
-	if(lengths.length < spikePosCache.length){
-		t = spikePosCache[lengths.length];
-	}else{
-		t = [];
-		for(var i=0;i<lengths.length;++i){
-			t[i] = i / (lengths.length-1);
-		}
+var hornTCache = [
+	                          [],                          //0
+	                        [0.50],                        //1
+	                     [0.25, 0.75],                     //2
+	                  [0.15, 0.50, 0.85],                  //3
+	               [0.10, 0.37, 0.63, 0.90],               //4
+	            [0.10, 0.30, 0.50, 0.70, 0.90],            //5
+	         [0.10, 0.27, 0.43, 0.57, 0.73, 0.90],         //6
+	      [0.10, 0.25, 0.38, 0.50, 0.62, 0.75, 0.90],      //7
+	   [0.07, 0.20, 0.33, 0.44, 0.56, 0.68, 0.80, 0.93],   //8
+	[0.05, 0.18, 0.30, 0.40, 0.50, 0.60, 0.70, 0.82, 0.95] //9
+];
+function drawSpikes(ctx, p0x,p0y,c0x,c0y,c1x,c1y,p1x,p1y, count, lengths, curves) {
+	var cachedTs;
+	if (curves) {
+		if (count < hornTCache.length) cachedTs = hornTCache[count];
+	} else {
+		if (count < teethTCache.length) cachedTs = teethTCache[count];
 	}
-	for(var i = 0; i < t.length; ++i){
-		ptOn = pointOnBezier(p0x,p0y,c0x,c0y,c1x,c1y,p1x,p1y,t[i]);
-		ctx.moveTo(ptOn.x,ptOn.y-1);
-		if(curves){
-			//if(t[i]>0.9) curveMul = 0.7;
-			if(t[i]>0.5) curveMul = 1;
-			//else if(t[i]<0.1) curveMul = -0.7;
-			else if(t[i]<0.5) curveMul = -1;
-			else curveMul = 0;
+	
+	var variableLength = Array.isArray(lengths);
+	
+	for (var i = 0; i < count; i++) {
+		
+		var t = cachedTs ? cachedTs[i] : (i / (count - 1));
+		var length = variableLength ? lengths[i] : lengths;
+		var curve = curves ? curves[i] : 0;
+		var ptOn = pointOnBezier(p0x, p0y, c0x, c0y, c1x, c1y, p1x, p1y, t);
+		
+		ctx.moveTo(ptOn.x, ptOn.y - 1);
+		
+		if (!curves) {
+			ctx.lineTo(ptOn.x, ptOn.y + length);
+			continue;
+		}
+		
+		var normal = normalToBezier(p0x, p0y, c0x, c0y, c1x, c1y, p1x, p1y, t);
+		
+		if (curve) {
+			var curveMult = Math.min(Math.max(t * 4 - 2, -1), 1);
+			
 			ctx.bezierCurveTo(
-				ptOn.x+curves[i]*curveMul,ptOn.y+lengths[i]/3,
-				ptOn.x+curves[i]*curveMul,ptOn.y+(lengths[i]+lengths[i])/3,
-				ptOn.x,ptOn.y+lengths[i]);
-		}else{
-			ctx.lineTo(ptOn.x,ptOn.y+lengths[i]);
+				ptOn.x + curve * curveMult,
+				ptOn.y + length / 3,
+				ptOn.x + curve * curveMult,
+				ptOn.y + 2 * length / 3,
+				ptOn.x + curve * curveMult * curveMult * curveMult / 2,
+				ptOn.y + length);
+		} else {
+			ctx.lineTo(
+				ptOn.x + normal.x * length,
+				ptOn.y + normal.y * length);
 		}
 	}
 }
 
-function pointOnBezier(p0x,p0y,c0x,c0y,c1x,c1y,p1x,p1y,t){
-	if(t<=0) return {x: p0x, y: p0y};
-	if(t>=1) return {x: p1x, y: p1y};
+function pointOnBezier(p0x, p0y, c0x, c0y, c1x, c1y, p1x, p1y, t) {
+	if (t <= 0) return {x: p0x, y: p0y};
+	if (t >= 1) return {x: p1x, y: p1y};
+	
+	var oneMinusT = 1 - t;
+	
 	//step 1
-	var Ax = ( (1 - t) * p0x ) + (t * c0x),
-		Ay = ( (1 - t) * p0y ) + (t * c0y),
-		Bx = ( (1 - t) * c0x ) + (t * c1x),
-		By = ( (1 - t) * c0y ) + (t * c1y),
-		Cx = ( (1 - t) * c1x ) + (t * p1x),
-		Cy = ( (1 - t) * c1y ) + (t * p1y),
+	var Ax = (oneMinusT * p0x) + (t * c0x),
+	    Ay = (oneMinusT * p0y) + (t * c0y),
+	    Bx = (oneMinusT * c0x) + (t * c1x),
+	    By = (oneMinusT * c0y) + (t * c1y),
+	    Cx = (oneMinusT * c1x) + (t * p1x),
+	    Cy = (oneMinusT * c1y) + (t * p1y),
 	//step 2
-		Dx = ( (1 - t) * Ax ) + (t * Bx),
-		Dy = ( (1 - t) * Ay ) + (t * By),
-		Ex = ( (1 - t) * Bx ) + (t * Cx),
-		Ey = ( (1 - t) * By ) + (t * Cy);
+	    Dx = (oneMinusT * Ax) + (t * Bx),
+	    Dy = (oneMinusT * Ay) + (t * By),
+	    Ex = (oneMinusT * Bx) + (t * Cx),
+	    Ey = (oneMinusT * By) + (t * Cy);
 	//step 3
 	return {
-		x: ( (1 - t) * Dx ) + (t * Ex),
-		y: ( (1 - t) * Dy ) + (t * Ey)
+		x: (oneMinusT * Dx) + (t * Ex),
+		y: (oneMinusT * Dy) + (t * Ey)
 	};
 }
 
-function filledArray(v,l){
-	var arr = [];
-	for(var i=0;i<l;++i){
-		arr[i] = v;
-	}
-	return arr;
+function normalToBezier(p0x, p0y, c0x, c0y, c1x, c1y, p1x, p1y, t) {
+	if (t < 0) t = 0;
+	else if (t > 1) t = 1;
+	
+	var oneMinusT = 1 - t;
+	var x =
+		3 * oneMinusT * oneMinusT * (c0x - p0x) +
+		6 * t * oneMinusT * (c1x - c0x) +
+		3 * t * t * (p1x - c1x);
+	var y =
+		3 * oneMinusT * oneMinusT * (c0y - p0y) +
+		6 * t * oneMinusT * (c1y - c0y) +
+		3 * t * t * (p1y - c1y);
+	
+	var mag = Math.sqrt(x * x + y * y);
+	
+	return {x: -y / mag, y: x / mag};
 }
+
+this.SkullRenderer = SkullRenderer;
+}).call(this);

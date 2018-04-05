@@ -52,7 +52,7 @@ CursedWordsTranslator.skullPairsToMarkup = function(skullPairs, pairsPerLine) {
 		}
 		for (var j = 0; j < skullPairs[i].length; j++) {
 			if (j !== 0) plain += ' ';
-			plain += skullPairs[i][j].markup;
+			plain += skullPairs[i][j].markup.whole;
 		}
 	}
 	
@@ -189,7 +189,7 @@ CursedWordsTranslator.prototype.wordsToSkullPairs = function(words) {
 						+explicit[1], +explicit[2], +explicit[3]));
 			} else if (word === '{notfound}') {
 				// Missing word
-				setWord(i, CursedWordsTranslator.missingSkullPair);
+				setWord(indices, CursedWordsTranslator.missingSkullPair);
 			} else {
 				var request = provider.requestOccurrences(word)
 					.onsuccess(makeCallback(indices, function(indices, cpws) {
