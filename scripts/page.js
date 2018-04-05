@@ -1,6 +1,6 @@
 'use strict';
 
-var markupInput, plainInput, manualInput, preferChaptersBelow4Input;
+var markupInput, plainInput, manualInput;
 var suggestions, plainSuggest;
 var displaySkulls, skullRenderer;
 var translationRequest;
@@ -47,7 +47,6 @@ function markupToPlain() {
 		}
 		
 		window.focus();
-		alert();
 		return;
 	}
 	
@@ -101,7 +100,6 @@ window.addEventListener('DOMContentLoaded', function() {
 	plainInput = document.getElementById('plainInput');
 	plainSuggest = document.getElementById('plainSuggest');
 	manualInput = document.getElementById('manualCheck');
-	preferChaptersBelow4Input = document.getElementById('preferCh4Check');
 	
 	skullRenderer = new SkullRenderer(document.getElementById('skullCanvas'));
 	
@@ -145,6 +143,13 @@ window.addEventListener('DOMContentLoaded', function() {
 				plainToMarkup();
 				e.preventDefault();
 			}
+		});
+		
+		var preferCh4Check = document.getElementById('preferCh4Check');
+		translator.avoidChaptersAbove4 = preferCh4Check.checked;
+		
+		preferCh4Check.addEventListener('click', function() {
+			translator.avoidChaptersAbove4 = preferCh4Check.checked;
 		});
 	});
 });
