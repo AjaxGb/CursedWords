@@ -125,7 +125,7 @@ window.addEventListener('DOMContentLoaded', function() {
 		
 		document.getElementById('markupButton').onclick = markupToPlain;
 		
-		plainInput.addEventListener('keydown', function(e) {
+		markupInput.addEventListener('keydown', function(e) {
 			if((e.key === 'Enter' || e.keyCode === 13) && e.ctrlKey){
 				markupToPlain();
 				e.preventDefault();

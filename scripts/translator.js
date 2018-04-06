@@ -61,10 +61,7 @@ CursedWordsTranslator.skullPairsToMarkup = function(skullPairs, pairsPerLine) {
 
 CursedWordsTranslator.plainToWords = function(plain) {
 	var words = plain.toLowerCase().match(CursedWordsTranslator.wordRE);
-	
-	for (var i = words.length - 1; i >= 0; i--) {
-		words[i]
-	}
+	if (!words) words = [];
 	
 	return words;
 };
@@ -310,7 +307,7 @@ CursedWordsTranslator.Request.prototype.abort = function() {
 	}
 	
 	for (var i = 0; i < this._onabort.length; i++) {
-		this._onabort[i].call(me);
+		this._onabort[i].call(this);
 	}
 };
 
