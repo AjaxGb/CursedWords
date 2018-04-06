@@ -52,6 +52,7 @@ function markupToPlain() {
 	
 	if (cpws.length === 0) return;
 	translationRequest = translator.cpwsToWords(cpws);
+	// Ensure request is stored in variable before onfinalize
 	translationRequest
 		.onfinalize(function() {
 			translationRequest = undefined;
@@ -78,6 +79,7 @@ function plainToMarkup() {
 	
 	if (words.length === 0) return;
 	translationRequest = translator.wordsToSkullPairs(words);
+	// Ensure request is stored in variable before onfinalize
 	translationRequest
 		.onfinalize(function() {
 			translationRequest = undefined;

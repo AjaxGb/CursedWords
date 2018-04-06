@@ -57,8 +57,6 @@ function SkullRenderer(canvas) {
 	this.ctx.lineCap = 'round';
 	this.ctx.fillStyle = '#FFF';
 	this.ctx.strokeStyle = '#FFF';
-	
-	this.cache = Object.create(null);
 }
 
 SkullRenderer.strawHat = new Image(84, 77);
@@ -94,10 +92,6 @@ SkullRenderer.prototype.drawSkullPairs = function(skullPairs) {
 };
 
 SkullRenderer.prototype.drawSkull = function(x, y, skull) {
-	var normalizedMarkup = skull.markup.whole;
-	if (!skull.markup.teeth) normalizedMarkup += '0';
-	this.cache[normalizedMarkup] = true;
-	
 	// Draw custom pirate image if skull is piratical
 	if (skull.type == Skull.PIRATE) {
 		this.ctx.drawImage(SkullRenderer.strawHat, x - 17, y - 35, 84, 77);

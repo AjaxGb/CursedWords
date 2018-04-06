@@ -353,7 +353,7 @@ CursedWordsTranslator.Request.prototype.onfinalize = function(callback) {
 		this._onabort.push(callback);
 	}
 	return this;
-}
+};
 
 CursedWordsTranslator.makeTranslation = function Translation(input, process) {
 	if (input.length === 0) {
