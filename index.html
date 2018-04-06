@@ -34,16 +34,19 @@ VVVVVVVVVVVVV
 	<script src="scripts/drawSkulls.js"></script>
 	<script src="scripts/translator.js"></script>
 	<script src="scripts/providers/indexeddb.js"></script>
+	<script src="scripts/providers/inmemory.js"></script>
 	<script src="scripts/suggestions.js"></script>
 	<script src="scripts/utility.js"></script>
 	<script src="scripts/page.js"></script>
 	
 	<script>
 		var translator;
-		var providerRequest = CursedWordsIDBProvider.open("db/transcript.xml")
+		var providerRequest = CursedWordsTranslator
+			.autoProvider('db/transcript.xml', 1)
 			.onsuccess(function(provider) {
 				translator = new CursedWordsTranslator(provider);
 			});
+		
 	</script>
 	
 	<!-- Props to http://realfavicongenerator.net/ -->

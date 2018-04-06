@@ -9,6 +9,30 @@ function CursedWordsTranslator(provider, options) {
 		true : options.avoidChaptersAbove4;
 }
 
+CursedWordsTranslator.autoProvider = function(transcriptURL, dbVersion) {
+	if (window.indexedDB) {
+		return new CursedWordsTranslator.Request(function(resolve, reject) {
+			CursedWordsIDBProvider
+				.open(transcriptURL, 'CWTranscript', dbVersion)
+				.onsuccess(resolve)
+				.onerror(function(error) {
+					if (error.unableToOpenDB) {
+						// The error was simple inability to open the
+						// database. Fall back to in-memory provider.
+						providerRequest = CursedWordsInMemoryProvider
+							.open(transcriptURL)
+							.onsuccess(resolve)
+							.onerror(reject);
+					} else {
+						reject(error);
+					}
+				});
+		});
+	} else {
+		return CursedWordsInMemoryProvider.open(transcriptURL);
+	}
+};
+
 CursedWordsTranslator.wordRE = /\S+/g;
 CursedWordsTranslator.explicitEntryRE = /^{(?:\w+:)?(\d+),(?:\w+:)?(\d+),(?:\w+:)?(\d+)}$/;
 
