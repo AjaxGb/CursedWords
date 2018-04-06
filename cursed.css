@@ -161,7 +161,7 @@ ul {
 .checkboxWrapper {
 	height: auto;
 	vertical-align: top;
-	font-size: smaller;
+	font-size: 83%;
 	margin-bottom: 10px;
 }
 
@@ -228,7 +228,7 @@ hr {
 }
 
 .compact {
-	font-size: smaller;
+	font-size: 83%;
 }
 
 .compact p, .compact div, .compact li, .compact ul {
@@ -338,7 +338,7 @@ strong {
 	width: 60px;
 	line-height: 18px;
 	text-align: center;
-	font-size: small;
+	font-size: 13px;
 	border-radius: 5px;
 	border: 1px solid #888;
 	background: linear-gradient(to bottom, #FAFAFA 0%,#DDD 100%);
