@@ -12,20 +12,18 @@ CursedWordsIDBProvider.open = function(transcriptUrl, dbName, dbVersion) {
 		dbVersion = dbVersion || 1;
 		
 		var provider = Object.create(CursedWordsIDBProvider.prototype);
-		var dbOpen = indexedDB.open(dbName, dbVersion);
+		try {
+			var dbOpen = indexedDB.open(dbName, dbVersion);
+		} catch (err) {
+			console.log(err);
+			err.unableToOpenDB = true;
+			throw err;
+		}
 		var transcriptReq;
-		
-		// TODO: dbOpen.onblocked
 		
 		dbOpen.onupgradeneeded = function(e) {
 			console.log('Database is out of date');
 			var db = dbOpen.result;
-			
-			db.onversionchange = function() {
-				db.close();
-				window.location.reload();
-				alert('Database version changed in another tab! Reload required.');
-			}
 			
 			if (e.oldVersion < 1) {
 				var pageStore = db.createObjectStore('pages');
@@ -41,39 +39,108 @@ CursedWordsIDBProvider.open = function(transcriptUrl, dbName, dbVersion) {
 			transcriptReq.responseType = 'document';
 			
 			transcriptReq.onload = function() {
+				if (this.status < 200 || this.status >= 300) {
+					db.close();
+					indexedDB.deleteDatabase(dbName);
+					return reject(new Error('Failed to download transcript!'));
+				}
 				console.log('Transcript downloaded');
-				var transaction = db.transaction(
-					['pages', 'index'], 'readwrite');
 				
-				populateIDb(
-					transaction.objectStore('pages'),
-					transaction.objectStore('index'),
-					transcriptReq.response.documentElement);
+				var transaction, pageStore, indexStore;
+				try {
+					transaction = db.transaction(
+						['pages', 'index'], 'readwrite');
+					pageStore = transaction.objectStore('pages');
+					indexStore = transaction.objectStore('index');
+					
+					populateIDb(pageStore, indexStore,
+						transcriptReq.response.documentElement);
+				} catch (err) {
+					console.error(err);
+					db.close();
+					indexedDB.deleteDatabase(dbName);
+					return reject(
+						new Error('Failed to parse transcript!'));
+				}
 				
-				provider.db = db;
-				resolve(provider);
+				pageStore.add(true, 'verify');
+				
+				transaction.oncomplete = function() {
+					provider.db = db;
+					resolve(provider);
+				};
+				
+				transaction.onerror = function() {
+					console.error(transaction.error);
+					db.close();
+					indexedDB.deleteDatabase(dbName);
+					reject(new Error('Failed to save transcript!'));
+				};
 			};
 			
-			transcriptReq.onerror = reject;
+			transcriptReq.onerror = function(err) {
+				console.error(err);
+				db.close();
+				indexedDB.deleteDatabase(dbName);
+				reject(new Error('Failed to download transcript!'));
+			};
 			
 			transcriptReq.send();
 		};
 		
 		dbOpen.onsuccess = function(e) {
-			if (!transcriptReq) {
-				console.log('Database is up-to-date');
-				provider.db = dbOpen.result;
-				resolve(provider);
-			}
+			if (transcriptReq) return;
+			
+			var db = dbOpen.result;
+			var verifyRequest = db.transaction('pages')
+				.objectStore('pages').get('verify');
+			
+			verifyRequest.onsuccess = function() {
+				if (verifyRequest.result === true) {
+					console.log('Database is up-to-date');
+					provider.db = db;
+					resolve(provider);
+				} else {
+					db.close();
+					indexedDB.deleteDatabase(dbName);
+					reject(new Error('Something has gone wrong! Please ' +
+						'close all but one Cursed Words Translator ' +
+						'tabs and reload.'));
+				}
+			};
+			
+			verifyRequest.onerror = function() {
+				console.error(verifyRequest.error);
+				db.close();
+				indexedDB.deleteDatabase(dbName);
+				reject(err);
+			};
 		};
 		
-		dbOpen.onerror = reject;
+		dbOpen.onblocked = function() {
+			alert('Something has gone wrong! Please close all but one ' +
+				'Cursed Words Translator tabs and reload.');
+		};
+		
+		dbOpen.onerror = function() {
+			console.error(dbOpen.error);
+			indexedDB.deleteDatabase(dbName);
+			var myErr = new Error('Unable to open indexedDB!');
+			myErr.unableToOpenDB = true;
+			reject(myErr);
+		};
 		
 		return function() {
 			if (transcriptReq) transcriptReq.abort();
 			dbOpen.abort();
 		};
 	});
+};
+
+CursedWordsIDBProvider.prototype.purge = function() {
+	var name = this.db.name;
+	this.db.close();
+	indexedDB.deleteDatabase(name);
 };
 
 CursedWordsIDBProvider.prototype.requestWord = function(chapter, page, word) {
@@ -164,50 +231,88 @@ CursedWordsIDBProvider.prototype.requestSuggestions = function(prefix, maxCount)
 
 var wordRE = /\S+/g;
 
-function populateIDb(pageStore, indexStore, xmlRoot) {	
+function populateIDb(pageStore, indexStore, transcriptNode) {
+	pageStore.clear();
+	indexStore.clear();
+	
+	var walker = transcriptNode.ownerDocument.createTreeWalker(
+		transcriptNode,
+		NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
+		null, true);
+	
 	var index = Object.create(null);
-	// Iter chapters
-	for (var chapEl = xmlRoot.firstElementChild;
-			chapEl; chapEl = chapEl.nextElementSibling) {
+	
+	// Iter over chapters
+	walker.firstChild();
+	do {
+		if (walker.currentNode.tagName !== 'chapter') continue;
 		
-		var chapNum = +chapEl.getAttribute('num');
+		var chapNum = +walker.currentNode.getAttribute('num');
 		
-		// Iter pages
-		for (var pageEl = chapEl.firstElementChild;
-				pageEl; pageEl = pageEl.nextElementSibling) {
+		if (!chapNum || chapNum < 0) {
+			console.error('Invalid chapter number: ', walker.currentNode);
+			continue;
+		}
+		
+		// Enter chapter
+		walker.firstChild();
+		do {
+			if (walker.currentNode.tagName !== 'page') continue;
 			
-			var pageNum = +pageEl.getAttribute('num'),
-			    currPage = [];
+			var pageNum = +walker.currentNode.getAttribute('num');
 			
-			// Iter text
-			for (var textEl = pageEl.firstChild; textEl;
-					textEl = textEl.nextSibling) {
+			if (!pageNum || pageNum < 0) {
+				console.error('Invalid page number: ', walker.currentNode);
+				continue;
+			}
+			
+			var currPage = [];
+			
+			// Enter page
+			walker.firstChild();
+			do {
 				
 				var reResult;
-				if (textEl.nodeType === Node.TEXT_NODE) {
-					// Normal text. Add to both page and index.
-					while (reResult = wordRE.exec(textEl.nodeValue)) {
+				
+				if (walker.currentNode.nodeType === Node.TEXT_NODE) {
+					// Parse text
+					while (reResult =
+							wordRE.exec(walker.currentNode.nodeValue)) {
 						var word = reResult[0];
 						var wordNum = currPage.push(word);
 						var indexArr = index[word] || (index[word] = []);
 						
 						indexArr.push([chapNum, pageNum, wordNum]);
 					}
-				} else if (textEl.tagName
-						&& textEl.tagName.toLowerCase() === 'lang') {
-					// Text in a <lang> element. Add to page only.
-					for (var langTextEl = textEl.firstChild; langTextEl;
-							langTextEl = langTextEl.nextSibling) {
-						while (reResult = wordRE.exec(langTextEl.nodeValue)) {
-							currPage.push(reResult[0]);
+				} else if (walker.currentNode.tagName === 'lang') {
+					// Enter language element
+					walker.firstChild();
+					do {
+						if (walker.currentNode.nodeType === Node.TEXT_NODE) {
+							// Parse text
+							while (reResult =
+									wordRE.exec(walker.currentNode.nodeValue)) {
+								var word = reResult[0];
+								// Do not add to index
+							}
 						}
-					}
+					} while (walker.nextSibling());
+					walker.parentNode();
+					// End of language element
 				}
-			}
+				
+			} while (walker.nextSibling());
+			walker.parentNode();
+			// End of page
 			
 			pageStore.add(currPage, chapNum + ',' + pageNum);
-		}
-	}
+			
+		} while (walker.nextSibling());
+		walker.parentNode();
+		// End of chapter
+		
+	} while (walker.nextSibling());
+	// End of transcript
 
 	for (var word in index) {
 		indexStore.add(index[word], word);
