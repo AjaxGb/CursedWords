@@ -1,6 +1,16 @@
 'use strict';
 
 function Skull(horns, eyes, teeth, markup) {
+	if (arguments.length === 1) {
+		var regexResult = Skull.markupSoloRE.exec(horns);
+		if (!regexResult) throw new Error('Invalid markup');
+		
+		horns = regexResult[1];
+		eyes = regexResult[2];
+		teeth = regexResult[3];
+		markup = regexResult[0];
+	}
+	
 	this.markup = {};
 	
 	// Horns
@@ -112,14 +122,15 @@ Skull.unparseHorns = function(num) {
 Skull.getAllInText = function(input) {
 	var skulls = [], dat;
 	
-	while ((dat = Skull.markupRE.exec(input)) !== null) {
+	while ((dat = Skull.markupGlobalRE.exec(input)) !== null) {
 		skulls.push(new Skull(dat[1], dat[2], dat[3], dat[0]));
 	}
 	
 	return skulls;
 };
 
-Skull.markupRE = /([.!]*|\uD83D\uDC52)\(([oO0.]*|[xX])\)(\d?)/g;
+Skull.markupGlobalRE = /([.!]*|\uD83D\uDC52)\(([oO0.]*|[xX])\)(\d?)/g;
+Skull.markupSoloRE = /^([.!]*|\uD83D\uDC52)\(([oO0.]*|[xX])\)(\d?)$/;
 Skull.hornRE = /^[.!]*$/;
 Skull.eyeRE = /^[oO0.]*$/;
 Skull.NORMAL  = 0;
