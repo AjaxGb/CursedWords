@@ -76,7 +76,6 @@ CursedWordsIDBProvider.open = function(transcriptUrl, dbName, dbVersion) {
 	});
 };
 
-// `word` can be an array.
 CursedWordsIDBProvider.prototype.requestWord = function(chapter, page, word) {
 	var db = this.db;
 	
@@ -88,20 +87,16 @@ CursedWordsIDBProvider.prototype.requestWord = function(chapter, page, word) {
 			.get(chapter + ',' + page)
 			.onsuccess = function() {
 				if (this.result === undefined) {
-					return reject(new Error("No such entry."));
+					return reject(new Error('No such entry.'));
 				}
 				
-				if (Array.isArray(word)) {
-					var results = [];
-					
-					for (var i = 0; i < word.length; i++) {
-						results[i] = this.result[word[i - 1]];
-					}
-					
-					resolve(results);
-				} else {
-					resolve(this.result[word - 1]);
+				var result = this.result[word - 1];
+				
+				if (result === undefined) {
+					return reject(new Error('No such entry.'));
 				}
+				
+				resolve(result);
 			};
 		
 		return transaction.abort.bind(transaction);
@@ -119,7 +114,7 @@ CursedWordsIDBProvider.prototype.requestOccurrences = function(word) {
 			.get(word)
 			.onsuccess = function() {
 				if (this.result === undefined) {
-					return reject(new Error("No such entry."));
+					return reject(new Error('No such entry.'));
 				}
 				
 				resolve(this.result);
@@ -143,7 +138,7 @@ CursedWordsIDBProvider.prototype.requestSuggestions = function(prefix, maxCount)
 			.openCursor(IDBKeyRange.bound(prefix, prefix + '\uFFFF'))
 			.onsuccess = function() {
 				if (this.result === undefined) {
-					return reject(new Error("No such entry."));
+					return reject(new Error('No such entry.'));
 				}
 				
 				if (this.result && this.result.key) {
