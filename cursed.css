@@ -156,6 +156,7 @@ ul {
 
 .markupDescription .example img {
 	margin: -4px 3px;
+	image-rendering: -webkit-optimize-contrast
 }
 
 .checkboxWrapper {
