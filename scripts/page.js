@@ -42,7 +42,8 @@ function markupToPlain() {
 			
 			if (!pagesOpened[url]) {
 				pagesOpened[url] = true;
-				window.open(url).blur();
+				var newWindow = window.open(url);
+				if (newWindow) newWindow.blur();
 			}
 		}
 		
