@@ -1,3 +1,0 @@
-shades
-shadows
-shadow

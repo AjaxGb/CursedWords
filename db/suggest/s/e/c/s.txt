@@ -1,5 +1,0 @@
-secret
-second
-secrets
-sec
-secured

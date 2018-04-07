@@ -29,14 +29,28 @@ VVVVVVVVVVVVV
 	<meta name=viewport content="width=device-width, initial-scale=1">
 	<title>Cursed Spirit Language Translator</title>
 	<link rel="manifest" href="manifest.json">
-	<base target="_blank">
 	<link rel="stylesheet" type="text/css" href="cursed.css">
 	<script src="scripts/skull.js"></script>
-	<script src="scripts/drawSkulls.js"></script>
-	<script src="scripts/translate.js"></script>
+	<script src="scripts/skullrender.js"></script>
+	<script src="scripts/translator.js"></script>
+	<script src="scripts/providers/indexeddb.js"></script>
+	<script src="scripts/providers/inmemory.js"></script>
+	<script src="scripts/suggestions.js"></script>
 	<script src="scripts/utility.js"></script>
+	<script src="scripts/page.js"></script>
+	
+	<script>
+		var translator;
+		var providerRequest = CursedWordsTranslator
+			.autoProvider('transcript.xml', 1)
+			.onsuccess(function(provider) {
+				translator = new CursedWordsTranslator(provider);
+			});
+		
+	</script>
 	
 	<!-- Props to http://realfavicongenerator.net/ -->
+	<link rel="icon" type="image/png" href="icon/favicon-16x16.png" sizes="16x16">
 	<link rel="apple-touch-icon" sizes="57x57" href="icon/apple-touch-icon-57x57.png">
 	<link rel="apple-touch-icon" sizes="60x60" href="icon/apple-touch-icon-60x60.png">
 	<link rel="apple-touch-icon" sizes="72x72" href="icon/apple-touch-icon-72x72.png">
@@ -46,17 +60,15 @@ VVVVVVVVVVVVV
 	<link rel="apple-touch-icon" sizes="144x144" href="icon/apple-touch-icon-144x144.png">
 	<link rel="apple-touch-icon" sizes="152x152" href="icon/apple-touch-icon-152x152.png">
 	<link rel="apple-touch-icon" sizes="180x180" href="icon/apple-touch-icon-180x180.png">
-	<link rel="icon" type="image/png" href="icon/favicon-32x32.png" sizes="32x32">
 	<link rel="icon" type="image/png" href="icon/favicon-48x48.png" sizes="48x48">
 	<link rel="icon" type="image/png" href="icon/favicon-194x194.png" sizes="194x194">
 	<link rel="icon" type="image/png" href="icon/favicon-96x96.png" sizes="96x96">
 	<link rel="icon" type="image/png" href="icon/android-chrome-192x192.png" sizes="192x192">
-	<link rel="icon" type="image/png" href="icon/favicon-16x16.png" sizes="16x16">
-	<link rel="icon" type="image/x-icon" href="favicon.ico" sizes="96x96">
 	<link rel="mask-icon" href="icon/safari-pinned-tab.svg" color="#000000">
 	<meta name="msapplication-config" content="icon/browserconfig.xml">
 	<meta name="msapplication-TileColor" content="#da532c">
 	<meta name="msapplication-TileImage" content="icon/mstile-144x144.png">
+	<link rel="icon" type="image/png" href="icon/favicon-16x16.png" sizes="16x16">
 </head>
 
 <body>
@@ -106,7 +118,7 @@ VVVVVVVVVVVVV
 				</ul>
 				<p>Finally, type the number of teeth.</p>
 				<p class="example">
-					Example: <img src="pics/skullExample.png" width="32" height="20"> becomes
+					Example: <img src="pics/skullExample.png" height="20"> becomes
 					<code>.!(..)2 !!.(.o)3</code>
 				</p>
 			</div>
@@ -115,7 +127,7 @@ VVVVVVVVVVVVV
 			
 			<div class="gridElement checkboxWrapper">
 				<div class="checkboxHighlight">
-					<input type="checkbox" id="manualCheck"></input>
+					<input type="checkbox" id="manualCheck">
 					<label for="manualCheck">Manual Translation</label>
 				</div>
 				<p>
@@ -130,7 +142,7 @@ VVVVVVVVVVVVV
 			
 			<div class="gridElement checkboxWrapper">
 				<div class="checkboxHighlight">
-					<input type="checkbox" id="preferCh4Check" checked></input>
+					<input type="checkbox" id="preferCh4Check" checked>
 					<label for="preferCh4Check">Prefer Chapters 4 and Earlier</label>
 				</div>
 				<p>
@@ -146,7 +158,10 @@ VVVVVVVVVVVVV
 		<hr>
 		
 		<div class="description">
-			<h1>Cursed Words Translator</h1>
+			<h1>
+				Cursed Words Translator
+				<a href="https://github.com/AjaxGb/CursedWords" class="github"></a>
+			</h1>
 			<p>
 			A project to automate translations to and from the
 			<a href="http://paranatural.wikia.com/wiki/Spirit_Languages#Cursed_Words">Cursed Language</a>
@@ -158,14 +173,13 @@ VVVVVVVVVVVVV
 			<p>
 			Each pair of skulls corresponds to a single word from the archives of Paranatural itself, so
 			translations require looking up arbitrary words from the comic. This website relies on a 
-			hand-maintained &ldquo;database&rdquo; of captions, which may lag behind the comic. Currently,
-			it is complete up through Chapter 4, Page 40. You can check out the state of the database for yourself
-			<a href="https://github.com/AjaxGb/CursedWords/tree/gh-pages/db">here</a>.
+			hand-maintained transcript, which I am currently working on bringing up-to-date. You can
+			check out the state of the database for yourself
+			<a href="https://github.com/AjaxGb/CursedWords/blob/gh-pages/transcript.xml">here</a>.
 			</p>
 			<p>
 			Sometimes the exact wordcount of a page can be ambiguous, for example in the case of hyphenated 
-			words, sound effects, tiny unreadable background conversations, words&shy;bunched&shy;up&shy;all&shy;together,
-			etc. Best judgement will be used in these cases.
+			words, sound effects, tiny unreadable background conversations, words&shy;bunched&shy;up&shy;all&shy;together, etc. Best judgement will be used in these cases.
 			</p>
 			
 			<div class="expandable minimized">
@@ -208,7 +222,7 @@ VVVVVVVVVVVVV
 								..(oo)3 .(o.)&nbsp;&nbsp;(..)2 (oo)3<br>
 								(..)1 .!(o.)7&nbsp;&nbsp;..(o.)2 !.....(.o)6<br>
 								!.(.o)4 .(oo)2&nbsp;&nbsp;!..(..)5 (..)3
-							<div></td>
+							</div></td>
 							<td><div class="emptyCode">
 								<!-- Empty -->
 							</div></td>
@@ -354,25 +368,17 @@ VVVVVVVVVVVVV
 	<div class="attribution">
 		<address>
 			Translator coded by Sol Toder
-			(<a href="mailto:toders@rpi.edu">toders@rpi.edu</a>)
+			(<a href="http://www.soltoder.com/">www.soltoder.com</a>)
 		</address>
 		<p>
 			Database complete up to Chapter 4, Page 40 (more soon)
 		</p>
 		<p>
 			Last updated
-			<time datetime="2016-07-27">July 27, 2016</time>
+			<time datetime="2018-04-06">April 6, 2018</time>
 		</p>
 		<p class="tiny">thank mr skeltal</p>
 	</div>
 </div>
 </body>
-<script>
-	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-	ga('create', 'UA-81476628-1', 'auto');
-	ga('send', 'pageview');
-</script>
 </html>
