@@ -1,23 +1,20 @@
 body {
 	width: 100%;
-	margin: 0px auto;
+	margin: 0 auto;
 	font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
 	background-color: white;
 }
 
 .page {
 	height: 100%;
-	display: flex;
-	flex-flow: column nowrap;
-	justify-content: center;
-	align-items: center;
+	width: 100%;
 }
 
 .content {
 	display: flex;
 	flex-flow: column nowrap;
-	align-items: justify;
-	max-width: 900px;
+	align-items: center;
+	width: 100%;
 }
 
 .form {
@@ -25,7 +22,8 @@ body {
 	flex-flow: row wrap;
 	justify-content: center;
 	flex: 1 0 auto;
-	margin: 10px 0px 20px 0px;
+	width: 100%;
+	margin: 10px 0 20px 0;
 }
 
 .gridElement {
@@ -45,7 +43,7 @@ button:focus,
 textarea:focus,
 button:focus,
 .expandableHeader:focus:before {
-	box-shadow: 0 0 0px  1.5px #CCF;
+	box-shadow: 0 0 0  1.5px #CCF;
 }
 
 textarea {
@@ -63,17 +61,17 @@ textarea {
 .suggestions {
 	display: block;
 	position: absolute;
-    top: 80%;
-	left: 0px;
-    margin: 0px;
+	top: 80%;
+	left: 0;
+	margin: 0;
 	margin-top: -10px;
-    padding: 0px;
+	padding: 0;
 	padding-top: 10px;
-    width: 100%;
-    border: 1px solid #AAA;
-    border-radius: 0px 0px 5px 5px;
-    box-sizing: border-box;
-    text-indent: 0px;
+	width: 100%;
+	border: 1px solid #AAA;
+	border-radius: 0 0 5px 5px;
+	box-sizing: border-box;
+	text-indent: 0;
 	overflow: hidden;
 	cursor: default;
 	z-index: 1;
@@ -92,7 +90,7 @@ textarea {
 }
 
 .suggestions li.selected {
-    background-color: #ECECEC;
+	background-color: #ECECEC;
 }
 
 button {
@@ -121,7 +119,7 @@ button:hover {
 
 .gridBreak {
 	width: 100%;
-	height: 0px;
+	height: 0;
 	flex: none;
 }
 
@@ -133,7 +131,7 @@ button:hover {
 code {
 	background-color: #EEE;
 	border: 1px solid #CCC;
-	padding: 0px 2px;
+	padding: 0 2px;
 	font-family: monospace;
 }
 
@@ -175,10 +173,10 @@ ul {
 .checkboxWrapper input {
 	width: 15px;
 	height: 15px;
-	margin: 0px;
+	margin: 0;
 	margin-left: 9px;
 	position: relative;
-    top: 2px;
+	top: 2px;
 	cursor: pointer;
 }
 
@@ -186,17 +184,18 @@ ul {
 	padding-left: 9px;
 	font-weight: bold;
 	position: relative;
-    top: -1px;
+	top: -1px;
 	cursor: pointer;
 }
 
 .checkboxWrapper p {
-	margin: 10px 0px;
+	margin: 10px 0;
 }
 
 hr {
-	margin: 0px auto;
+	margin: 0 auto;
 	width: 80%;
+	min-width: 300px;
 }
 
 .description {
@@ -205,26 +204,41 @@ hr {
 	justify-content: center;
 	align-items: center;
 	flex: none;
-	margin: 20px 0px;
-}
-
-.description  * {
-	max-width: 700px;
-	width: 70%;
-}
-
-.description>* {
+	width: 70vw;
 	min-width: 300px;
+	max-width: 640px;
+	margin: 20px 0 0;
+}
+
+.description * {
+	width: 100%;
 }
 
 .description h1 {
-	margin: 10px 0px;
+	margin: 10px 0;
 	margin-bottom: 10px;
 	text-align: center;
 }
 
+.description .github {
+	display: inline-block;
+	width: 20px;
+	height: 20px;
+	background: url(pics/github.png) 0 / 100%;
+	vertical-align: middle;
+	margin: 0 5px;
+	image-rendering: -webkit-optimize-contrast;
+	-webkit-transition: opacity 0.5s; /* Safari */
+	transition: opacity 0.5s;
+	opacity: .2;
+}
+
+.description .github:hover {
+	opacity: .85;
+}
+
 .description p {
-	margin: 5px 0px;
+	margin: 5px 0;
 	text-align: justify;
 }
 
@@ -239,7 +253,7 @@ hr {
 
 .compact h1 {
 	font-size: larger;
-	margin: 3px 0px;
+	margin: 3px 0;
 }
 
 strong {
@@ -250,15 +264,18 @@ strong {
 	position: relative;
 	border-radius: 10px;
 	min-width: 325px;
+	max-width: 650px;
+	width: 101%;
 	box-sizing: border-box;
-	margin: 10px 0px;
+	margin: 10px 0;
 	background-color: #EEE;
 	padding: 40px;
 }
 
 .tips:after {
 	content: "";
-	position:absolute;
+	position: absolute;
+	pointer-events: none;
 	top: 10px;
 	left: 10px;
 	right: 10px;
@@ -297,29 +314,29 @@ strong {
 }
 
 .expandable {
-	max-width: 700px;
-	width: 90%;
-	-webkit-transition: max-height 0.5s, width 0.3s 0.1s; /* Safari */
-    transition: max-height 0.5s, width 0.3s 0.1s;
+	width: 800px;
+	max-width: 95vw;
 	max-height: 800px;
+	-webkit-transition: max-height 0.5s, width 0.3s 0.1s; /* Safari */
+	transition: max-height 0.5s, width 0.3s 0.1s;
 	overflow: hidden;
-	margin: 20px 0px;
+	margin: 20px 0;
 	border-radius: 10px;
 	border: 1px solid #555;
 }
 
 .expandable.minimized {
-	width: 70%;
 	max-height: 38px;
+	width: 100%;
 	-webkit-transition: max-height 0.5s, width 0.2s; /* Safari */
-    transition: max-height 0.5s, width 0.2s;
+	transition: max-height 0.5s, width 0.2s;
 }
 
 .expandable .expandableHeader {
 	box-sizing: border-box;
 	height: 38px;
 	width: auto;
-	margin: 0px;
+	margin: 0;
 	cursor: pointer;
 	font-size: 20px;
 	font-weight: bold;
@@ -332,7 +349,7 @@ strong {
 .expandable .expandableHeader:before {
 	content: "Hide";
 	position: relative;
-    top: -2px;
+	top: -2px;
 	display: inline-block;
 	padding: 2px;
 	margin-right: 15px;
@@ -355,20 +372,20 @@ strong {
 
 .expandableContent {
 	overflow: hidden;
-	margin: 0px;
+	margin: 0;
 	width: 100%;
-	padding: 0px;
+	padding: 0;
 	border-top: 1px solid #555;
 }
 
 .expandableContent * {
 	width: auto;
-	margin: 0px;
+	margin: 0;
 }
 
 .comicCodes {
 	table-layout: fixed;
-	padding: 10px 0px;
+	padding: 10px 0;
 	border-collapse: collapse;
 	width: 100%;
 }
@@ -379,11 +396,11 @@ strong {
 }
 
 .comicCodes tr:nth-child(odd) {
-    background-color: #FCFCFC;
+	background-color: #FCFCFC;
 }
 
 .comicCodes tr:nth-child(even) {
-    background-color: #F2F2F2;
+	background-color: #F2F2F2;
 }
 
 .comicCodes tr.selectedRow:nth-child(odd) {
@@ -407,7 +424,7 @@ strong {
 .comicCodes th,
 .comicCodes td:nth-child(1),
 .comicCodes td:nth-child(4) {
-	padding: 0px 2px;
+	padding: 0 2px;
 	text-align: center;
 	vertical-align: middle;
 }
@@ -427,7 +444,7 @@ strong {
 	vertical-align: top;
 	background-color: #EEE;
 	border: 1px solid #CCC;
-	padding: 0px 2px;
+	padding: 0 2px;
 	font-family: monospace;
 	white-space: nowrap;
 	overflow: auto;
@@ -447,7 +464,7 @@ strong {
 }
 
 ins, del {
-	margin: 0px!important;
+	margin: 0!important;
 	text-decoration: underline;
 }
 
@@ -460,16 +477,17 @@ ins {
 }
 
 .attribution {
-	font-style: italic;
-	margin: -10px 3% 20px auto;
-	max-width: 94%;
-	color: #222;
-	padding: 0px;
+	display: inline-block;
+	margin: 0;
+	padding: 18px 20px;
+	float: right;
 	text-align: right;
+	color: #222;
+	font-style: italic;
 }
 
 .attribution * {
-	margin: 0px;
+	margin: 0;
 	width: 100%;
 	font-size: 12px;
 }
