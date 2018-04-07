@@ -1,6 +1,0 @@
-local
-location
-locked
-locker
-lockers
-locking

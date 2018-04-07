@@ -1,5 +1,0 @@
-help
-hello
-helping
-helped
-helps

@@ -1,4 +1,0 @@
-flags
-flar
-flavor
-flaw

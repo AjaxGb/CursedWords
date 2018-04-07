@@ -1,4 +1,0 @@
-through
-throw
-throwing
-thrown

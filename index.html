@@ -42,7 +42,7 @@ VVVVVVVVVVVVV
 	<script>
 		var translator;
 		var providerRequest = CursedWordsTranslator
-			.autoProvider('db/transcript.xml', 1)
+			.autoProvider('transcript.xml', 1)
 			.onsuccess(function(provider) {
 				translator = new CursedWordsTranslator(provider);
 			});
@@ -158,7 +158,12 @@ VVVVVVVVVVVVV
 		<hr>
 		
 		<div class="description">
-			<h1>Cursed Words Translator</h1>
+			<h1>
+				Cursed Words Translator
+				<a href="https://github.com/AjaxGb/CursedWords">
+					<img class="github" src="pics/github.png">
+				</a>
+			</h1>
 			<p>
 			A project to automate translations to and from the
 			<a href="http://paranatural.wikia.com/wiki/Spirit_Languages#Cursed_Words">Cursed Language</a>
@@ -170,8 +175,9 @@ VVVVVVVVVVVVV
 			<p>
 			Each pair of skulls corresponds to a single word from the archives of Paranatural itself, so
 			translations require looking up arbitrary words from the comic. This website relies on a 
-			hand-maintained &ldquo;database&rdquo; of captions, which may lag behind the comic. I'm finally starting on Chapter 4 (it's 151 pages, can you blame me for hesitating?). You can check out the state of the database for yourself
-			<a href="https://github.com/AjaxGb/CursedWords/tree/gh-pages/db">here</a>.
+			hand-maintained transcript, which I am currently working on bringing up-to-date. You can
+			check out the state of the database for yourself
+			<a href="https://github.com/AjaxGb/CursedWords/blob/gh-pages/transcript.xml">here</a>.
 			</p>
 			<p>
 			Sometimes the exact wordcount of a page can be ambiguous, for example in the case of hyphenated 

@@ -1,5 +1,0 @@
-command
-commandments
-commodore
-common
-communion

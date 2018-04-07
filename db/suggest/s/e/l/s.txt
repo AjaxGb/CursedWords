@@ -1,4 +1,0 @@
-self
-sell
-selection
-selling

@@ -1,3 +1,0 @@
-build
-building
-buildings

@@ -1,4 +1,0 @@
-vocabulary
-voice
-volumes
-vow
