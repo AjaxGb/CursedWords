@@ -25,7 +25,6 @@ var MAGIC = {
 	upperJawMinY: 13,
 	upperJawMaxY: 17,
 	
-	teethGap: 10,
 	teethLengthShort: 6,
 	teethLengthLong: 10,
 	
@@ -91,6 +90,15 @@ SkullRenderer.prototype.drawSkullPairs = function(skullPairs) {
 	}
 };
 
+var eyePosCache = [
+	                        [],                         // 0
+	                    [[25,  0]],                     // 1
+	               [[15,  0], [35,  0]],                // 2
+	          [[14,  5], [25, -8], [36,  5]],           // 3
+	     [[13,  6], [17, -7], [33, -7], [37,  6]],      // 4
+	[[10,  5], [17, -8], [25,  5], [33, -8], [40,  5]], // 5
+];
+
 SkullRenderer.prototype.drawSkull = function(x, y, skull) {
 	// Draw custom pirate image if skull is piratical
 	if (skull.type == Skull.PIRATE) {
@@ -120,11 +128,10 @@ SkullRenderer.prototype.drawSkull = function(x, y, skull) {
 		y - MAGIC.skullHeight,
 		x,
 		y);
+	ctx.fill();
 	
 	// Draw X and stop if skull is missing
 	if (skull.type === Skull.MISSING) {
-		ctx.fill();
-		
 		ctx.strokeStyle = '#F00';
 		ctx.lineCap = 'square';
 		ctx.lineWidth = MAGIC.xLineWeight;
@@ -150,20 +157,6 @@ SkullRenderer.prototype.drawSkull = function(x, y, skull) {
 		ctx.lineCap = 'round';
 		return;
 	}
-	
-	// Draw eyes
-	var eyeSpread = (MAGIC.skullWidth + 4 * MAGIC.bezierNudge) / (eyes.length + 1);
-	var eyeX = x + eyeSpread - 2 * MAGIC.bezierNudge;
-	
-	for (var i = 0; i < eyes.length; i++) {
-		circle(ctx, eyeX, y, MAGIC.eyeRadius);
-		if (eyes[i] === '.') {
-			circle(ctx, eyeX, y, MAGIC.dotRadius);
-		}
-		eyeX += eyeSpread;
-	}
-	
-	ctx.fill();
 	
 	// Draw teeth
 	var topTeeth, bottomTeeth;
@@ -258,6 +251,38 @@ SkullRenderer.prototype.drawSkull = function(x, y, skull) {
 		y - MAGIC.scalpMin,
 		horns.length, hornLengths, curves);
 	ctx.stroke();
+	
+	// Draw eyes
+	
+	var eyePositions, eyeSpread;
+	
+	if (eyes.length < eyePosCache.length) {
+		eyePositions = eyePosCache[eyes.length];
+	} else {
+		eyeSpread = MAGIC.skullWidth / (eyes.length + 1);
+	}
+	
+	ctx.globalCompositeOperation = 'destination-out';
+	ctx.beginPath();
+	for (var i = 0; i < eyes.length; i++) {
+		var eyeX = x + (eyePositions ? eyePositions[i][0] : (i + 1) * eyeSpread);
+		var eyeY = y + (eyePositions ? eyePositions[i][1] : 0);
+		
+		circle(ctx, eyeX, eyeY, MAGIC.eyeRadius);
+	}
+	ctx.fill();
+	
+	ctx.globalCompositeOperation = 'source-over';
+	ctx.beginPath();
+	for (var i = 0; i < eyes.length; i++) {
+		var eyeX = x + (eyePositions ? eyePositions[i][0] : (i + 1) * eyeSpread);
+		var eyeY = y + (eyePositions ? eyePositions[i][1] : 0);
+		
+		if (eyes[i] === '.') {
+			circle(ctx, eyeX, eyeY, MAGIC.dotRadius);
+		}
+	}
+	ctx.fill();
 }
 
 function circle(ctx, x, y, r) {
@@ -270,7 +295,7 @@ var teethTCache = [
 	                        [0.50],                        //1
 	                     [0.37, 0.63],                     //2
 	                  [0.15, 0.50, 0.85],                  //3
-	               [0.00, 0.37, 0.63, 1.00],               //4
+	               [0.00, 0.38, 0.62, 1.00],               //4
 	            [0.00, 0.32, 0.50, 0.68, 1.00],            //5
 	         [0.00, 0.28, 0.43, 0.57, 0.72, 1.00],         //6
 	      [0.00, 0.25, 0.38, 0.50, 0.62, 0.75, 1.00],      //7
@@ -292,9 +317,9 @@ var hornTCache = [
 function drawSpikes(ctx, p0x,p0y,c0x,c0y,c1x,c1y,p1x,p1y, count, lengths, curves) {
 	var cachedTs;
 	if (curves) {
-		if (count < hornTCache.length) cachedTs = hornTCache[count];
+		cachedTs = hornTCache[count];
 	} else {
-		if (count < teethTCache.length) cachedTs = teethTCache[count];
+		cachedTs = teethTCache[count];
 	}
 	
 	var variableLength = Array.isArray(lengths);
