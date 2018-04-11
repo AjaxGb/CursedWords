@@ -281,30 +281,37 @@ CursedWordsTranslator.Request = function(action) {
 	this._onabort = [];
 	this._isErrorCaught = false;
 	
-	function resolve(result) {
+	function resolve() {
+		// Takes an arbitrary number of arguments
+		
 		if (me.state !== CursedWordsTranslator.Request.RUNNING) {
 			throw new Error('The request has already finalized.');
 		} else {
 			me.state = CursedWordsTranslator.Request.SUCCESS;
 		}
 		
-		me.result = result;
+		me.results = arguments;
 		
 		for (var i = 0; i < me._onsuccess.length; i++) {
 			me._onsuccess[i].apply(me, arguments);
 		}
 	}
 	
-	function reject(error) {
+	function reject() {
+		// Takes an arbitrary number of arguments
+		
 		if (me.state !== CursedWordsTranslator.Request.RUNNING) {
 			throw new Error('The request has already finalized.');
 		} else {
 			me.state = CursedWordsTranslator.Request.ERROR;
 		}
 		
-		me.error = error;
+		me.errors = arguments;
 		
-		if (!me._isErrorCaught) console.error(error);
+		if (!me._isErrorCaught) {
+			console.error.apply(console, arguments);
+		}
+		
 		for (var i = 0; i < me._onerror.length; i++) {
 			me._onerror[i].apply(me, arguments);
 		}
@@ -355,7 +362,7 @@ CursedWordsTranslator.Request.prototype.onprogress = function(callback) {
 
 CursedWordsTranslator.Request.prototype.onsuccess = function(callback) {
 	if (this.state === CursedWordsTranslator.Request.SUCCESS) {
-		callback(this.result);
+		callback.apply(this, this.results);
 	} else {
 		this._onsuccess.push(callback);
 	}
@@ -365,7 +372,7 @@ CursedWordsTranslator.Request.prototype.onsuccess = function(callback) {
 CursedWordsTranslator.Request.prototype.onerror = function(callback) {
 	this._isErrorCaught = true;
 	if (this.state === CursedWordsTranslator.Request.ERROR) {
-		callback(this.error);
+		callback.apply(this, this.errors);
 	} else {
 		this._onerror.push(callback);
 	}
@@ -374,7 +381,7 @@ CursedWordsTranslator.Request.prototype.onerror = function(callback) {
 
 CursedWordsTranslator.Request.prototype.onabort = function(callback) {
 	if (this.state === CursedWordsTranslator.Request.ABORTED) {
-		callback();
+		callback.call(this);
 	} else {
 		this._onabort.push(callback);
 	}
@@ -382,12 +389,20 @@ CursedWordsTranslator.Request.prototype.onabort = function(callback) {
 };
 
 CursedWordsTranslator.Request.prototype.onfinalize = function(callback) {
-	if (this.state !== CursedWordsTranslator.Request.RUNNING) {
-		callback();
-	} else {
+	switch (this.state) {
+	case CursedWordsTranslator.Request.RUNNING:
 		this._onsuccess.push(callback);
 		this._onerror.push(callback);
 		this._onabort.push(callback);
+		break;
+	case CursedWordsTranslator.Request.SUCCESS:
+		callback.apply(this, this.results);
+		break;
+	case CursedWordsTranslator.Request.ERROR:
+		callback.apply(this, this.errors);
+		break;
+	case CursedWordsTranslator.Request.ABORTED:
+		callback.call(this);
 	}
 	return this;
 };
