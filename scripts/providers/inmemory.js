@@ -245,6 +245,7 @@ function parseTranscript(index, chapterList, transcriptNode) {
 							while (reResult =
 									wordRE.exec(walker.currentNode.nodeValue)) {
 								var word = reResult[0];
+								currPage.push(word);
 								// Do not add to index
 							}
 						}
