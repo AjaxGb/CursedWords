@@ -66,6 +66,19 @@ CursedWordsTranslator.markupToSkullPairs = function(markup) {
 };
 
 CursedWordsTranslator.skullPairsToMarkup = function(skullPairs, pairsPerLine) {
+	if (pairsPerLine === 0) {
+		// No whitespace
+		var plain = '';
+		
+		for (var i = 0; i < skullPairs.length; i++) {
+			for (var j = 0; j < skullPairs[i].length; j++) {
+				plain += skullPairs[i][j].markup.whole;
+			}
+		}
+		
+		return plain;
+	}
+	
 	pairsPerLine = pairsPerLine || 2;
 	
 	var plain = '';

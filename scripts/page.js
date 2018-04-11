@@ -65,7 +65,7 @@ function markupToPlain() {
 		.onsuccess(function(words) {
 			plainInput.value = CursedWordsTranslator.wordsToPlain(words);
 			pushQueryArgs({
-				markup: markupInput.value.trim()
+				markup: CursedWordsTranslator.skullPairsToMarkup(skullPairs, 0)
 			});
 		});
 }
