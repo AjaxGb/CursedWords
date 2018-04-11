@@ -15,8 +15,8 @@ CursedWordsTranslator.autoProvider = function(transcriptURL, dbVersion) {
 			CursedWordsIDBProvider
 				.open(transcriptURL, 'CWTranscript', dbVersion)
 				.onsuccess(resolve)
-				.onerror(function(error) {
-					if (error.unableToOpenDB) {
+				.onerror(function(error, trySomethingElse) {
+					if (trySomethingElse) {
 						// The error was simple inability to open the
 						// database. Fall back to in-memory provider.
 						providerRequest = CursedWordsInMemoryProvider

@@ -16,8 +16,7 @@ CursedWordsIDBProvider.open = function(transcriptUrl, dbName, dbVersion) {
 			var dbOpen = indexedDB.open(dbName, dbVersion);
 		} catch (err) {
 			console.log(err);
-			err.unableToOpenDB = true;
-			throw err;
+			return reject(err, true); // Try something else
 		}
 		var transcriptReq;
 		
@@ -126,8 +125,7 @@ CursedWordsIDBProvider.open = function(transcriptUrl, dbName, dbVersion) {
 			console.error(dbOpen.error);
 			indexedDB.deleteDatabase(dbName);
 			var myErr = new Error('Unable to open indexedDB!');
-			myErr.unableToOpenDB = true;
-			reject(myErr);
+			reject(myErr, true); // Try something else
 		};
 		
 		return function() {
