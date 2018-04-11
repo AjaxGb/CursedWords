@@ -35,6 +35,8 @@ CursedWordsIDBProvider.open = function(transcriptUrl, dbName, dbVersion) {
 			transcriptReq = new XMLHttpRequest();
 			
 			transcriptReq.open('GET', transcriptUrl);
+			transcriptReq.setRequestHeader('Cache-Control', 'no-cache');
+			transcriptReq.setRequestHeader('Cache-Control', 'max-age=0');
 			transcriptReq.responseType = 'document';
 			
 			transcriptReq.onload = function() {
