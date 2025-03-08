@@ -106,12 +106,15 @@ window.addEventListener('DOMContentLoaded', function() {
 	plainSuggest = document.getElementById('plainSuggest');
 	manualInput = document.getElementById('manualCheck');
 
+	var markupButton = document.getElementById('markupButton');
+	var plainButton = document.getElementById('plainButton');
+
 	providerRequest = CursedWordsTranslator
 		.autoProvider('transcript.xml', 4)
 		.onsuccess(function(provider) {
 			translator = new CursedWordsTranslator(provider);
 		});
-	markupInput.disabled = plainInput.disabled = false;
+	markupButton.disabled = plainButton.disabled = false;
 
 	skullRenderer = new SkullRenderer(document.getElementById('skullCanvas'));
 
@@ -135,7 +138,7 @@ window.addEventListener('DOMContentLoaded', function() {
 	providerRequest.onsuccess(function() {
 		suggestions = new Suggestions(translator, plainInput, plainSuggest);
 
-		document.getElementById('markupButton').onclick = markupToPlain;
+		markupButton.onclick = markupToPlain;
 
 		markupInput.addEventListener('keydown', function(e) {
 			if((e.key === 'Enter' || e.keyCode === 13) && e.ctrlKey){
@@ -148,7 +151,7 @@ window.addEventListener('DOMContentLoaded', function() {
 			updateDisplaySkulls(markupInput.value, false);
 		});
 
-		document.getElementById('plainButton').onclick = plainToMarkup;
+		plainButton.onclick = plainToMarkup;
 
 		plainInput.addEventListener('keydown', function(e) {
 			if ((e.key === 'Enter' || e.keyCode === 13) && e.ctrlKey) {
