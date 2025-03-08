@@ -1,5 +1,7 @@
 'use strict';
 
+var TRANSCRIPT_VERSION = 5;
+
 var markupInput, plainInput, manualInput;
 var suggestions, plainSuggest;
 var displaySkulls, skullRenderer;
@@ -110,7 +112,7 @@ window.addEventListener('DOMContentLoaded', function() {
 	var plainButton = document.getElementById('plainButton');
 
 	providerRequest = CursedWordsTranslator
-		.autoProvider('transcript.xml', 4)
+		.autoProvider('transcript.xml', TRANSCRIPT_VERSION)
 		.onsuccess(function(provider) {
 			translator = new CursedWordsTranslator(provider);
 		});
