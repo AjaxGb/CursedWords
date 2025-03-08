@@ -2,9 +2,9 @@
 
 function CursedWordsTranslator(provider, options) {
 	this.provider = provider;
-	
+
 	options = options || {};
-	
+
 	this.avoidChaptersAbove4 = (options.avoidChaptersAbove4 === undefined) ?
 		true : options.avoidChaptersAbove4;
 }
@@ -57,11 +57,11 @@ CursedWordsTranslator.makeBlankSkullArray = function(numPairs) {
 CursedWordsTranslator.markupToSkullPairs = function(markup) {
 	var skulls = Skull.getAllInText(markup);
 	var result = [];
-	
+
 	for (var i = 0; i < skulls.length; i += 2) {
 		result.push(skulls.slice(i, i + 2));
 	}
-	
+
 	return result;
 };
 
@@ -69,20 +69,20 @@ CursedWordsTranslator.skullPairsToMarkup = function(skullPairs, pairsPerLine) {
 	if (pairsPerLine === 0) {
 		// No whitespace
 		var plain = '';
-		
+
 		for (var i = 0; i < skullPairs.length; i++) {
 			for (var j = 0; j < skullPairs[i].length; j++) {
 				plain += skullPairs[i][j].markup.whole;
 			}
 		}
-		
+
 		return plain;
 	}
-	
+
 	pairsPerLine = pairsPerLine || 2;
-	
+
 	var plain = '';
-	
+
 	for (var i = 0; i < skullPairs.length; i++) {
 		if (i !== 0) {
 			plain += (i % pairsPerLine === 0) ? '\n' : '  ';
@@ -92,25 +92,25 @@ CursedWordsTranslator.skullPairsToMarkup = function(skullPairs, pairsPerLine) {
 			plain += skullPairs[i][j].markup.whole;
 		}
 	}
-	
+
 	return plain;
 };
 
 CursedWordsTranslator.plainToWords = function(plain) {
 	var words = plain.toLowerCase().match(CursedWordsTranslator.wordRE);
 	if (!words) words = [];
-	
+
 	return words;
 };
 
 CursedWordsTranslator.wordsToPlain = function(words) {
 	var plain = '';
-	
+
 	for (var i = 0; i < words.length; i++) {
 		if (i !== 0) plain += ' ';
-		
+
 		var word = words[i];
-		
+
 		if (Array.isArray(word)) {
 			// CPW
 			plain +=
@@ -127,30 +127,30 @@ CursedWordsTranslator.wordsToPlain = function(words) {
 			throw new Error('Invalid word "' + word + '" found.');
 		}
 	}
-	
+
 	return plain;
 }
 
 CursedWordsTranslator.skullPairsToCPWs = function(skullPairs) {
 	var cpws = [];
-	
+
 	for (var i = 0; i < skullPairs.length; i++) {
 		var skull1 = skullPairs[i][0];
 		var skull2 = skullPairs[i][1];
-		
+
 		if (!skull2) {
 			// If there are an odd number of skulls,
 			// the last skull will be unpaired.
 			continue;
 		}
-		
+
 		cpws.push(skull1.type || skull2.type || [
 			(skull1.eyes + skull2.eyes)|0,
 			(skull1.horns + '' + skull1.teeth)|0,
 			(skull2.horns + '' + skull2.teeth)|0,
 		]);
 	}
-	
+
 	return cpws;
 };
 
@@ -159,10 +159,10 @@ CursedWordsTranslator.cpwToSkullPair = function(chap, page, word) {
 	word = chap[2] || word;
 	page = chap[1] || page;
 	chap = chap[0] || chap;
-	
+
 	var chapP1 = Math.floor(chap / 2);
 	var chapP2 = chapP1;
-	
+
 	if (chap % 2 === 1) {
 		// Odd number, split the difference randomly.
 		if (Math.random() >= 0.5) {
@@ -171,7 +171,7 @@ CursedWordsTranslator.cpwToSkullPair = function(chap, page, word) {
 			chapP2++;
 		}
 	}
-	
+
 	return [
 		new Skull(Math.floor(page / 10), chapP1, page % 10),
 		new Skull(Math.floor(word / 10), chapP2, word % 10),
@@ -179,19 +179,19 @@ CursedWordsTranslator.cpwToSkullPair = function(chap, page, word) {
 };
 
 CursedWordsTranslator.cpwToURL = function(cpw) {
-	return 'http://www.paranatural.net/comic/chapter-'+cpw[0]+'-page-'+cpw[1];	
+	return 'http://www.paranatural.net/comic/chapter-'+cpw[0]+'-page-'+cpw[1];
 };
 
 CursedWordsTranslator.prototype.cpwsToWords = function(cpws) {
 	var provider = this.provider;
-	
+
 	return CursedWordsTranslator.makeTranslation(cpws,
 		function(cpw, indices, setWord, makeCallback, reject) {
 			if (Array.isArray(cpw)) {
 				var request = provider.requestWord(cpw[0], cpw[1], cpw[2])
 					.onsuccess(makeCallback(indices))
 					.onerror(makeCallback(indices, cpw));
-				
+
 				return function() {
 					if (request.state === CursedWordsTranslator.Request.RUNNING) {
 						request.abort();
@@ -208,11 +208,11 @@ CursedWordsTranslator.prototype.cpwsToWords = function(cpws) {
 CursedWordsTranslator.prototype.wordsToSkullPairs = function(words) {
 	var avoidChaptersAbove4 = this.avoidChaptersAbove4;
 	var provider = this.provider;
-	
+
 	if (typeof words === 'string') {
 		words = words.toLowerCase().match(CursedWordsTranslator.wordRE)
 	}
-	
+
 	return CursedWordsTranslator.makeTranslation(words,
 		function(word, indices, setWord, makeCallback, reject) {
 			var explicit = CursedWordsTranslator.explicitEntryRE.exec(word);
@@ -228,12 +228,12 @@ CursedWordsTranslator.prototype.wordsToSkullPairs = function(words) {
 				var request = provider.requestOccurrences(word)
 					.onsuccess(makeCallback(indices, function(indices, cpws) {
 						var range = cpws.length;
-						
+
 						if (avoidChaptersAbove4) {
-							// Restrict the range to entries from chapter 4
-							// and earlier, unless none such exist.
+							// Restrict the range to entries from chapters 1-4,
+							// unless none such exist.
 							for (var i = range - 1; i >= 0; i--) {
-								if (cpws[i][0] <= 4) {
+								if (1 <= cpws[i][0] || cpws[i][0] <= 4) {
 									// Found a valid entry; this and all
 									// previous entries are good.
 									range = i + 1;
@@ -244,7 +244,7 @@ CursedWordsTranslator.prototype.wordsToSkullPairs = function(words) {
 							// valid entries, range will never be updated,
 							// so all entries will be fair game.
 						}
-						
+
 						var results = [];
 						for (var i = indices.length - 1; i >= 0; i--) {
 							var selection = Math.floor(Math.random() * range);
@@ -252,12 +252,12 @@ CursedWordsTranslator.prototype.wordsToSkullPairs = function(words) {
 								CursedWordsTranslator.cpwToSkullPair(
 									cpws[selection]));
 						}
-						
+
 						return results;
 					}))
 					.onerror(makeCallback(indices,
 						CursedWordsTranslator.missingSkullPair));
-				
+
 				return function() {
 					if (request.state === CursedWordsTranslator.Request.RUNNING) {
 						request.abort();
@@ -273,62 +273,62 @@ CursedWordsTranslator.prototype.getSuggestions = function(prefix, maxCount) {
 
 CursedWordsTranslator.Request = function(action) {
 	var me = this;
-	
+
 	this.state = CursedWordsTranslator.Request.RUNNING;
 	this._onprogress = [];
 	this._onsuccess = [];
 	this._onerror = [];
 	this._onabort = [];
 	this._isErrorCaught = false;
-	
+
 	function resolve() {
 		// Takes an arbitrary number of arguments
-		
+
 		if (me.state !== CursedWordsTranslator.Request.RUNNING) {
 			throw new Error('The request has already finalized.');
 		} else {
 			me.state = CursedWordsTranslator.Request.SUCCESS;
 		}
-		
+
 		me.results = arguments;
-		
+
 		for (var i = 0; i < me._onsuccess.length; i++) {
 			me._onsuccess[i].apply(me, arguments);
 		}
 	}
-	
+
 	function reject() {
 		// Takes an arbitrary number of arguments
-		
+
 		if (me.state !== CursedWordsTranslator.Request.RUNNING) {
 			throw new Error('The request has already finalized.');
 		} else {
 			me.state = CursedWordsTranslator.Request.ERROR;
 		}
-		
+
 		me.errors = arguments;
-		
+
 		if (!me._isErrorCaught) {
 			console.error.apply(console, arguments);
 		}
-		
+
 		for (var i = 0; i < me._onerror.length; i++) {
 			me._onerror[i].apply(me, arguments);
 		}
 	}
-	
+
 	function progress() {
 		// Takes an arbitrary number of arguments
-		
+
 		if (me.state !== CursedWordsTranslator.Request.RUNNING) {
 			throw new Error('The request has already finalized.');
 		}
-		
+
 		for (var i = 0; i < me._onprogress.length; i++) {
 			me._onprogress[i].apply(me, arguments);
 		}
 	}
-	
+
 	try {
 		this._abort = action(resolve, reject, progress);
 	} catch (error) {
@@ -346,10 +346,10 @@ CursedWordsTranslator.Request.prototype.abort = function() {
 		throw new Error('The request has already finalized.');
 	} else {
 		if (this._abort) this._abort();
-		
+
 		this.state = CursedWordsTranslator.Request.ABORTED;
 	}
-	
+
 	for (var i = 0; i < this._onabort.length; i++) {
 		this._onabort[i].call(this);
 	}
@@ -411,9 +411,9 @@ CursedWordsTranslator.makeTranslation = function Translation(input, process) {
 	if (input.length === 0) {
 		throw new Error('Passed zero-length input to a translation.');
 	}
-	
+
 	return new CursedWordsTranslator.Request(function(resolve, reject, progress) {
-		
+
 		var inputMap = Object.create(null);
 		for (var i = input.length - 1; i >= 0; i--) {
 			// Create a dict that lists each value once,
@@ -424,46 +424,46 @@ CursedWordsTranslator.makeTranslation = function Translation(input, process) {
 				indices: []
 			})).indices.push(i);
 		}
-		
+
 		var output = [];
-		
+
 		var numTranslated = 0;
 		var numTotal = input.length;
 		var allTranslated = false;
-		
+
 		function setWord(index, word) {
 			if (Array.isArray(index)) {
 				// Array of indices
 				for (var i = index.length - 1; i >= 0; i--) {
 					var curr = index[i];
-					
+
 					if (output[curr] === undefined) numTranslated++;
 					output[curr] = word || input[curr];
-					
+
 					progress(output[curr], curr);
 				}
 			} else {
 				if (typeof index !== 'number') {
 					throw new Error('Tried to set word at index ' + index);
 				}
-				
+
 				// Single index
 				if (output[index] === undefined) numTranslated++;
 				output[index] = word || input[index];
-				
+
 				progress(output[index], index);
 			}
-			
+
 			if (!allTranslated && numTranslated >= numTotal) {
 				// Last one!
 				allTranslated = true;
 				resolve(output);
 				return true;
 			}
-			
+
 			return false;
 		}
-		
+
 		function makeCallback(indices, value) {
 			if (arguments.length > 1) {
 				return function() {
@@ -471,18 +471,18 @@ CursedWordsTranslator.makeTranslation = function Translation(input, process) {
 						var args = [indices];
 						args.push.apply(args, arguments);
 						value = value.apply(null, args);
-						
+
 						if (Array.isArray(value)) {
 							var lastOne = false;
-							
+
 							for (var i = value.length - 1; i >= 0; i--) {
 								if (setWord(indices[i], value[i])) lastOne = true;
 							}
-							
+
 							return lastOne;
 						}
 					}
-					
+
 					return setWord(indices, value);
 				}
 			} else {
@@ -491,16 +491,16 @@ CursedWordsTranslator.makeTranslation = function Translation(input, process) {
 				};
 			}
 		}
-		
+
 		var aborts = [];
-		
+
 		for (var key in inputMap) {
 			var curr = inputMap[key];
-			
+
 			var abort = process(curr.value, curr.indices, setWord, makeCallback, reject);
 			if (abort) aborts.push(abort);
 		}
-		
+
 		return function() {
 			for (var i = aborts.length - 1; i >= 0; i--) {
 				aborts[i]();

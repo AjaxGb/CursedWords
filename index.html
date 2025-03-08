@@ -32,13 +32,13 @@ VVVVVVVVVVVVV
 	<link rel="stylesheet" type="text/css" href="cursed.css">
 	<script src="scripts/skull.js"></script>
 	<script src="scripts/skullrender.js"></script>
-	<script src="scripts/translator.js"></script>
+	<script src="scripts/translator.js=1"></script>
 	<script src="scripts/providers/indexeddb.js"></script>
 	<script src="scripts/providers/inmemory.js"></script>
 	<script src="scripts/suggestions.js"></script>
 	<script src="scripts/utility.js"></script>
 	<script src="scripts/page.js"></script>
-	
+
 	<script>
 		var translator;
 		var providerRequest = CursedWordsTranslator
@@ -46,9 +46,9 @@ VVVVVVVVVVVVV
 			.onsuccess(function(provider) {
 				translator = new CursedWordsTranslator(provider);
 			});
-		
+
 	</script>
-	
+
 	<!-- Props to http://realfavicongenerator.net/ -->
 	<link rel="icon" type="image/png" href="icon/favicon-16x16.png" sizes="16x16">
 	<link rel="apple-touch-icon" sizes="57x57" href="icon/apple-touch-icon-57x57.png">
@@ -122,9 +122,9 @@ VVVVVVVVVVVVV
 					<code>.!(..)2 !!.(.o)3</code>
 				</p>
 			</div>
-			
+
 			<div class="gridBreak"></div>
-			
+
 			<div class="gridElement checkboxWrapper">
 				<div class="checkboxHighlight">
 					<input type="checkbox" id="manualCheck">
@@ -139,14 +139,14 @@ VVVVVVVVVVVVV
 					This will probably set off your pop-up blocker.
 				</p>
 			</div>
-			
+
 			<div class="gridElement checkboxWrapper">
 				<div class="checkboxHighlight">
 					<input type="checkbox" id="preferCh4Check" checked>
 					<label for="preferCh4Check">Prefer Chapters 4 and Earlier</label>
 				</div>
 				<p>
-					While this is checked, &ldquo;To Skulls&rdquo; will avoid using 
+					While this is checked, &ldquo;To Skulls&rdquo; will avoid using
 					chapters after chapter four, unless no alternative exists.
 				</p>
 				<p>
@@ -154,9 +154,9 @@ VVVVVVVVVVVVV
 				</p>
 			</div>
 		</div>
-		
+
 		<hr>
-		
+
 		<div class="description">
 			<h1>
 				Cursed Words Translator
@@ -172,16 +172,16 @@ VVVVVVVVVVVVV
 			</p>
 			<p>
 			Each pair of skulls corresponds to a single word from the archives of Paranatural itself, so
-			translations require looking up arbitrary words from the comic. This website relies on a 
+			translations require looking up arbitrary words from the comic. This website relies on a
 			hand-maintained transcript, which I am currently working on bringing up-to-date. You can
 			check out the state of the transcript for yourself
 			<a href="https://github.com/AjaxGb/CursedWords/blob/master/transcript.xml">here</a>.
 			</p>
 			<p>
-			Sometimes the exact wordcount of a page can be ambiguous, for example in the case of hyphenated 
+			Sometimes the exact wordcount of a page can be ambiguous, for example in the case of hyphenated
 			words, sound effects, tiny unreadable background conversations, words&shy;bunched&shy;up&shy;all&shy;together, etc. Best judgement will be used in these cases.
 			</p>
-			
+
 			<div class="expandable minimized">
 				<div class="expandableHeader" tabindex="0">Occurrences in&nbsp;the&nbsp;Comic</div>
 				<div class="expandableContent">
@@ -323,7 +323,7 @@ VVVVVVVVVVVVV
 					</table>
 				</div>
 			</div>
-			
+
 			<div class="tips compact">
 				<h1>Tips:</h1>
 				<div class="tip">
@@ -371,11 +371,11 @@ VVVVVVVVVVVVV
 			(<a href="https://www.soltoder.com/">www.soltoder.com</a>)
 		</address>
 		<p>
-			Database complete up to Chapter 4, Page 75 (more soon)
+			Database complete up to Chapter 4, Page 75 (probably not adding any more)
 		</p>
 		<p>
 			Last updated
-			<time datetime="2018-04-10">April 10, 2018</time>
+			<time datetime="2025-07-03">March 7, 2025</time>
 		</p>
 		<p class="tiny">thank mr skeltal</p>
 	</div>
