@@ -27,8 +27,9 @@ CursedWordsIDBProvider.open = function(transcriptUrl, dbName, dbVersion) {
 			var db = dbOpen.result;
 
 			if (e.oldVersion < 1) {
-				var pageStore = db.createObjectStore('pages');
-				var indexStore = db.createObjectStore('index');
+				db.createObjectStore('meta');
+				db.createObjectStore('pages');
+				db.createObjectStore('index');
 			}
 
 			console.log('Downloading transcript...');
@@ -49,15 +50,21 @@ CursedWordsIDBProvider.open = function(transcriptUrl, dbName, dbVersion) {
 				}
 				console.log('Transcript downloaded');
 
-				var transaction, pageStore, indexStore;
+				var transaction, metaStore, pageStore, indexStore;
 				try {
 					transaction = db.transaction(
-						['pages', 'index'], 'readwrite');
+						['meta', 'pages', 'index'], 'readwrite');
+					metaStore = transaction.objectStore('meta');
 					pageStore = transaction.objectStore('pages');
 					indexStore = transaction.objectStore('index');
 
 					populateIDb(pageStore, indexStore,
 						transcriptReq.response.documentElement);
+
+					// TODO: Add "version" attr to transcript,
+					// store that instead of this. If transcript version
+					// is lower than db version, reload on page load.
+					metaStore.add(true, 'verify');
 				} catch (err) {
 					console.error(err);
 					db.close();
@@ -65,11 +72,6 @@ CursedWordsIDBProvider.open = function(transcriptUrl, dbName, dbVersion) {
 					return reject(
 						new Error('Failed to parse transcript!'));
 				}
-
-				// TODO: Add "version" attr to transcript,
-				// store that instead of this. If transcript version
-				// is lower than db version, reload on page load.
-				pageStore.add(true, 'verify');
 
 				transaction.oncomplete = function() {
 					provider.db = db;
@@ -98,8 +100,8 @@ CursedWordsIDBProvider.open = function(transcriptUrl, dbName, dbVersion) {
 			if (transcriptReq) return;
 
 			var db = dbOpen.result;
-			var verifyRequest = db.transaction('pages')
-				.objectStore('pages').get('verify');
+			var verifyRequest = db.transaction('meta')
+				.objectStore('meta').get('verify');
 
 			verifyRequest.onsuccess = function() {
 				if (verifyRequest.result === true) {
@@ -109,7 +111,7 @@ CursedWordsIDBProvider.open = function(transcriptUrl, dbName, dbVersion) {
 				} else {
 					db.close();
 					indexedDB.deleteDatabase(dbName);
-					reject(new Error('Failed to refresh the transcript! ' +
+					reject(new Error('Need to refresh the transcript! ' +
 						'Please close all but one Cursed Words Translator ' +
 						'tabs and reload.'));
 				}
