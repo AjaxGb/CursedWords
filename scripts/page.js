@@ -1,6 +1,6 @@
 'use strict';
 
-var TRANSCRIPT_VERSION = 5;
+var TRANSCRIPT_VERSION = 6;
 
 var markupInput, plainInput, manualInput;
 var suggestions, plainSuggest;
