@@ -4,21 +4,23 @@ var markupInput, plainInput, manualInput;
 var suggestions, plainSuggest;
 var displaySkulls, skullRenderer;
 var translationRequest;
+var translator;
+var providerRequest;
 
 function updateDisplaySkulls(skullPairs, normalizeMarkup) {
 	if (normalizeMarkup === undefined) normalizeMarkup = true;
-	
+
 	if (skullPairs) {
 		if (!Array.isArray(skullPairs)) {
 			skullPairs = CursedWordsTranslator.markupToSkullPairs(skullPairs);
 		}
 		displaySkulls = skullPairs;
 	}
-	
+
 	if (normalizeMarkup) {
 		markupInput.value = CursedWordsTranslator.skullPairsToMarkup(displaySkulls);
 	}
-	
+
 	if (skullRenderer) {
 		skullRenderer.drawSkullPairs(displaySkulls);
 	}
@@ -27,30 +29,30 @@ function updateDisplaySkulls(skullPairs, normalizeMarkup) {
 function markupToPlain() {
 	var skullPairs = CursedWordsTranslator.markupToSkullPairs(markupInput.value);
 	var cpws = CursedWordsTranslator.skullPairsToCPWs(skullPairs);
-	
+
 	updateDisplaySkulls(skullPairs);
 	plainInput.value = CursedWordsTranslator.wordsToPlain(cpws);
-	
+
 	if (translationRequest) translationRequest.abort();
-	
+
 	if (manualInput.checked) {
 		// Open pages but do not run translation
 		var pagesOpened = Object.create(null);
-		
+
 		for (var i = 0; i < cpws.length; i++) {
 			var url = CursedWordsTranslator.cpwToURL(cpws[i]);
-			
+
 			if (!pagesOpened[url]) {
 				pagesOpened[url] = true;
 				var newWindow = window.open(url);
 				if (newWindow) newWindow.blur();
 			}
 		}
-		
+
 		window.focus();
 		return;
 	}
-	
+
 	if (cpws.length === 0) return;
 	translationRequest = translator.cpwsToWords(cpws);
 	// Ensure request is stored in variable before onfinalize
@@ -72,12 +74,12 @@ function markupToPlain() {
 
 function plainToMarkup() {
 	var words = CursedWordsTranslator.plainToWords(plainInput.value);
-	
+
 	updateDisplaySkulls(
 		CursedWordsTranslator.makeBlankSkullArray(words.length));
-	
+
 	if (translationRequest) translationRequest.abort();
-	
+
 	if (words.length === 0) return;
 	translationRequest = translator.wordsToSkullPairs(words);
 	// Ensure request is stored in variable before onfinalize
@@ -98,19 +100,26 @@ function plainToMarkup() {
 }
 
 window.addEventListener('DOMContentLoaded', function() {
-	
+
 	markupInput = document.getElementById('markupInput');
 	plainInput = document.getElementById('plainInput');
 	plainSuggest = document.getElementById('plainSuggest');
 	manualInput = document.getElementById('manualCheck');
-	
+
+	providerRequest = CursedWordsTranslator
+		.autoProvider('transcript.xml', 4)
+		.onsuccess(function(provider) {
+			translator = new CursedWordsTranslator(provider);
+		});
+	markupInput.disabled = plainInput.disabled = false;
+
 	skullRenderer = new SkullRenderer(document.getElementById('skullCanvas'));
-	
+
 	var query = getQueryArgs();
 	if(Object.keys(query).length) {
-		
+
 		console.log('Query args:', query);
-		
+
 		if (query.plain && query.markup) {
 			plainInput.value = query.plain;
 			updateDisplaySkulls(query.markup);
@@ -122,35 +131,35 @@ window.addEventListener('DOMContentLoaded', function() {
 			providerRequest.onsuccess(markupToPlain);
 		}
 	}
-	
+
 	providerRequest.onsuccess(function() {
 		suggestions = new Suggestions(translator, plainInput, plainSuggest);
-		
+
 		document.getElementById('markupButton').onclick = markupToPlain;
-		
+
 		markupInput.addEventListener('keydown', function(e) {
 			if((e.key === 'Enter' || e.keyCode === 13) && e.ctrlKey){
 				markupToPlain();
 				e.preventDefault();
 			}
 		});
-		
+
 		markupInput.addEventListener('input', function() {
 			updateDisplaySkulls(markupInput.value, false);
 		});
-		
+
 		document.getElementById('plainButton').onclick = plainToMarkup;
-		
+
 		plainInput.addEventListener('keydown', function(e) {
 			if ((e.key === 'Enter' || e.keyCode === 13) && e.ctrlKey) {
 				plainToMarkup();
 				e.preventDefault();
 			}
 		});
-		
+
 		var preferCh4Check = document.getElementById('preferCh4Check');
 		translator.avoidChaptersAbove4 = preferCh4Check.checked;
-		
+
 		preferCh4Check.addEventListener('click', function() {
 			translator.avoidChaptersAbove4 = preferCh4Check.checked;
 		});

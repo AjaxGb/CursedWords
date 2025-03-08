@@ -37,17 +37,7 @@ VVVVVVVVVVVVV
 	<script src="scripts/providers/inmemory.js"></script>
 	<script src="scripts/suggestions.js"></script>
 	<script src="scripts/utility.js"></script>
-	<script src="scripts/page.js"></script>
-
-	<script>
-		var translator;
-		var providerRequest = CursedWordsTranslator
-			.autoProvider('transcript.xml', 4)
-			.onsuccess(function(provider) {
-				translator = new CursedWordsTranslator(provider);
-			});
-
-	</script>
+	<script src="scripts/page.js=1"></script>
 
 	<!-- Props to http://realfavicongenerator.net/ -->
 	<link rel="icon" type="image/png" href="icon/favicon-16x16.png" sizes="16x16">
@@ -80,7 +70,7 @@ VVVVVVVVVVVVV
 					placeholder="Skull markup"
 					autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
 					></textarea>
-				<button id="markupButton" type="button">
+				<button id="markupButton" type="button" disabled>
 					To Text
 				</button>
 			</div>
@@ -90,7 +80,7 @@ VVVVVVVVVVVVV
 					autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
 					></textarea>
 				<ul id="plainSuggest" class="suggestions"></ul>
-				<button id="plainButton" type="button">
+				<button id="plainButton" type="button" disabled>
 					To Skulls
 				</button>
 			</div>
