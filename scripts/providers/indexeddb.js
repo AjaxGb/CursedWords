@@ -64,7 +64,7 @@ CursedWordsIDBProvider.open = function(transcriptUrl, dbName, dbVersion) {
 					// TODO: Add "version" attr to transcript,
 					// store that instead of this. If transcript version
 					// is lower than db version, reload on page load.
-					metaStore.add(true, 'verify');
+					addKeyValue(metaStore, 'verify', true);
 				} catch (err) {
 					console.error(err);
 					db.close();
@@ -78,8 +78,8 @@ CursedWordsIDBProvider.open = function(transcriptUrl, dbName, dbVersion) {
 					resolve(provider);
 				};
 
-				transaction.onerror = function() {
-					console.error(transaction.error);
+				transaction.onerror = function(err) {
+					console.error(err.target.error, transaction.error);
 					db.close();
 					indexedDB.deleteDatabase(dbName);
 					reject(new Error('Failed to save transcript!'));
@@ -238,6 +238,12 @@ CursedWordsIDBProvider.prototype.requestSuggestions = function(prefix, maxCount)
 
 var wordRE = /\S+/g;
 
+function addKeyValue(store, key, value) {
+	store.add(value, key).onerror = function(err) {
+		console.error('Failed to add key-value', {store: store, key: key, value: value}, err);
+	};
+}
+
 function populateIDb(pageStore, indexStore, transcriptNode) {
 	pageStore.clear();
 	indexStore.clear();
@@ -313,7 +319,7 @@ function populateIDb(pageStore, indexStore, transcriptNode) {
 			walker.parentNode();
 			// End of page
 
-			pageStore.add(currPage, chapNum + ',' + pageNum);
+			addKeyValue(pageStore, chapNum + ',' + pageNum, currPage);
 
 		} while (walker.nextSibling());
 		walker.parentNode();
@@ -323,7 +329,7 @@ function populateIDb(pageStore, indexStore, transcriptNode) {
 	// End of transcript
 
 	for (var word in index) {
-		indexStore.add(index[word], word);
+		addKeyValue(indexStore, word, index[word]);
 	}
 }
 
