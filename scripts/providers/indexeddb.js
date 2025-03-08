@@ -109,8 +109,8 @@ CursedWordsIDBProvider.open = function(transcriptUrl, dbName, dbVersion) {
 				} else {
 					db.close();
 					indexedDB.deleteDatabase(dbName);
-					reject(new Error('Something has gone wrong! Please ' +
-						'close all but one Cursed Words Translator ' +
+					reject(new Error('Failed to refresh the transcript! ' +
+						'Please close all but one Cursed Words Translator ' +
 						'tabs and reload.'));
 				}
 			};
@@ -124,8 +124,8 @@ CursedWordsIDBProvider.open = function(transcriptUrl, dbName, dbVersion) {
 		};
 
 		dbOpen.onblocked = function() {
-			alert('Something has gone wrong! Please close all but one ' +
-				'Cursed Words Translator tabs and reload.');
+			alert('Failed to refresh the transcript! Please close all ' +
+				'but one Cursed Words Translator tabs and reload.');
 		};
 
 		dbOpen.onerror = function() {
